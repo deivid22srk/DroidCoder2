@@ -17,8 +17,27 @@ object ToolExecutor {
         gitManager: GitManager
     ): String {
         val args: Map<String, String> = try {
-            val json = Json.parseToJsonElement(toolCall.arguments).jsonObject
-            json.mapValues { (_, v) -> v.jsonPrimitive.content }
+            val argsElement = toolCall.arguments
+            when (argsElement) {
+                is JsonObject -> {
+                    argsElement.mapValues { (_, v) ->
+                        if (v is JsonPrimitive) v.content else v.toString()
+                    }
+                }
+                is JsonPrimitive -> {
+                    if (argsElement.isString) {
+                        val parsed = Json.parseToJsonElement(argsElement.content)
+                        if (parsed is JsonObject) {
+                            parsed.mapValues { (_, v) -> v.jsonPrimitive.content }
+                        } else {
+                            emptyMap()
+                        }
+                    } else {
+                        emptyMap()
+                    }
+                }
+                else -> emptyMap()
+            }
         } catch (e: Exception) {
             emptyMap()
         }

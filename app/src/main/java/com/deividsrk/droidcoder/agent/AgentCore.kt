@@ -109,13 +109,13 @@ class AgentCore(
                         )
 
                         // Execute the tool
-                        val argsJson = kotlinx.serialization.json.buildJsonObject {
+                        val argsJsonObject = kotlinx.serialization.json.buildJsonObject {
                             toolCall.arguments.forEach { (k, v) -> put(k, v) }
-                        }.toString()
+                        }
                         val toolResult = ToolExecutor.execute(
                             toolCall = ToolCallFunction(
                                 name = toolCall.name,
-                                arguments = argsJson
+                                arguments = argsJsonObject
                             ),
                             fileManager = fileManager,
                             gitManager = gitManager
