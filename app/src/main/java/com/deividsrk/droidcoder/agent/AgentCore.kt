@@ -49,6 +49,7 @@ class AgentCore(
             )
             if (history.isEmpty() || history.last().content != userMessage) {
                 history.add(userMsg)
+                onProgress(ProgressUpdate("Iniciando agente..."))
             }
 
             var iterations = 0
@@ -68,21 +69,13 @@ class AgentCore(
                         val toolCall = agentResponse.toolCall
                         val content = agentResponse.response
 
-                        // Update progress
+                        // Update progress status
                         val status = if (toolCall != null) {
                             "Executando: ${toolCall.name}"
                         } else {
                             "Concluindo..."
                         }
                         val argsFormatted = toolCall?.arguments?.entries?.joinToString(", ") { "${it.key}: \"${it.value}\"" }
-                        onProgress(
-                            ProgressUpdate(
-                                status = status,
-                                thought = thought,
-                                toolName = toolCall?.name,
-                                toolArgs = argsFormatted
-                            )
-                        )
 
                         if (toolCall == null || toolCall.name == "finish") {
                             finalResponse = content
@@ -95,6 +88,14 @@ class AgentCore(
                                     toolExecuted = toolCall?.name
                                 )
                             )
+                            onProgress(
+                                ProgressUpdate(
+                                    status = status,
+                                    thought = thought,
+                                    toolName = toolCall?.name,
+                                    toolArgs = argsFormatted
+                                )
+                            )
                             return@withContext Result.success(finalResponse)
                         }
 
@@ -105,6 +106,15 @@ class AgentCore(
                                 content = content,
                                 thought = thought,
                                 toolExecuted = toolCall.name
+                            )
+                        )
+
+                        onProgress(
+                            ProgressUpdate(
+                                status = status,
+                                thought = thought,
+                                toolName = toolCall.name,
+                                toolArgs = argsFormatted
                             )
                         )
 
@@ -152,6 +162,14 @@ class AgentCore(
                 ChatMessage(
                     role = "assistant",
                     content = finalResponse
+                )
+            )
+            onProgress(
+                ProgressUpdate(
+                    status = "Concluído",
+                    thought = null,
+                    toolName = null,
+                    toolArgs = null
                 )
             )
             Result.success(finalResponse)

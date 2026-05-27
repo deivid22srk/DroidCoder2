@@ -1,6 +1,7 @@
 package com.deividsrk.droidcoder.ui
 
 import android.app.Application
+import android.content.Context
 import android.net.Uri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -11,6 +12,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.decodeFromString
 
 /**
  * Central ViewModel for the DroidCoder2 application.
@@ -23,8 +27,32 @@ import kotlinx.coroutines.launch
  */
 class MainViewModel(application: Application) : AndroidViewModel(application) {
 
+    private val sharedPreferences = application.getSharedPreferences("droidcoder_prefs", Context.MODE_PRIVATE)
+
+    private fun loadConfig(): AppConfig {
+        val jsonString = sharedPreferences.getString("app_config", null)
+        return if (jsonString != null) {
+            try {
+                Json.decodeFromString<AppConfig>(jsonString)
+            } catch (e: Exception) {
+                AppConfig()
+            }
+        } else {
+            AppConfig()
+        }
+    }
+
+    private fun saveConfig(newConfig: AppConfig) {
+        try {
+            val jsonString = Json.encodeToString(newConfig)
+            sharedPreferences.edit().putString("app_config", jsonString).apply()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
     // Config
-    private val _config = MutableStateFlow(AppConfig())
+    private val _config = MutableStateFlow(loadConfig())
     val config: StateFlow<AppConfig> = _config.asStateFlow()
 
     // Chat
@@ -89,6 +117,14 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
         agentApi = AgentApi { _config.value }
         agentCore = AgentCore(agentApi, fileManager, gitManager)
+
+        // Initialize project path from persisted config if valid
+        val loadedConfig = _config.value
+        if (loadedConfig.projectPath.isNotBlank()) {
+            fileManager.setProjectRoot(loadedConfig.projectPath)
+            gitManager.setProjectRoot(fileManager.projectRoot!!)
+            refreshFiles()
+        }
     }
 
     /**
@@ -96,6 +132,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
      */
     fun updateConfig(newConfig: AppConfig) {
         _config.value = newConfig
+        saveConfig(newConfig)
         // Also update git manager with new creds
         if (newConfig.projectPath.isNotBlank()) {
             fileManager.setProjectRoot(newConfig.projectPath)
@@ -108,7 +145,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
      */
     fun selectProjectFolder(uri: Uri) {
         fileManager.setProjectRoot(uri)
-        _config.value = _config.value.copy(projectPath = fileManager.projectRoot?.absolutePath ?: "")
+        val newConfig = _config.value.copy(projectPath = fileManager.projectRoot?.absolutePath ?: "")
+        _config.value = newConfig
+        saveConfig(newConfig)
         gitManager.setProjectRoot(fileManager.projectRoot!!)
         refreshFiles()
     }
@@ -159,6 +198,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 _agentThought.value = progress.thought
                 _agentTool.value = progress.toolName
                 _agentToolArgs.value = progress.toolArgs
+                _messages.value = mutableHistory.toList()
             }.fold(
                 onSuccess = { response ->
                     _messages.value = mutableHistory.toList()
