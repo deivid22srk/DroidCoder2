@@ -38,8 +38,9 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
 import android.widget.Toast
 import com.deividsrk.droidcoder.ui.util.highlightCode
-import androidx.compose.foundation.border
 import androidx.compose.ui.text.TextStyle
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 
 @Composable
 fun ChatScreen(viewModel: MainViewModel) {
