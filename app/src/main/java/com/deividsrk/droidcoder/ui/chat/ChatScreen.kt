@@ -188,7 +188,8 @@ fun ChatScreen(viewModel: MainViewModel) {
             items(messages, key = { it.id }) { msg ->
                 ChatBubble(
                     message = msg,
-                    isUser = msg.role == "user"
+                    isUser = msg.role == "user",
+                    alwaysShowThought = config.alwaysShowThought
                 )
             }
 
@@ -374,9 +375,10 @@ private fun EmptyChatPlaceholder() {
 @Composable
 private fun ChatBubble(
     message: ChatMessage,
-    isUser: Boolean
+    isUser: Boolean,
+    alwaysShowThought: Boolean
 ) {
-    var showThought by remember { mutableStateOf(false) }
+    var showThought by remember(message.id, alwaysShowThought) { mutableStateOf(alwaysShowThought) }
 
     Column(
         modifier = Modifier

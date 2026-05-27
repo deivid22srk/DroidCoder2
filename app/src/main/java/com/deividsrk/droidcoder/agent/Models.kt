@@ -32,7 +32,8 @@ data class AppConfig(
     val authorName: String = "DroidCoder2",
     val authorEmail: String = "droidcoder@app.com",
     val projectPath: String = "",                   // folder selected via SAF
-    val useForegroundService: Boolean = false       // run agent in background with notification progress
+    val useForegroundService: Boolean = false,      // run agent in background with notification progress
+    val alwaysShowThought: Boolean = false          // always expand AI thinking in chat
 )
 
 /**

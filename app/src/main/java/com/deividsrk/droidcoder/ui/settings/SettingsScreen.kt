@@ -48,6 +48,7 @@ fun SettingsScreen(viewModel: MainViewModel) {
 
     val context = LocalContext.current
     var useForegroundService by remember { mutableStateOf(config.useForegroundService) }
+    var alwaysShowThought by remember { mutableStateOf(config.alwaysShowThought) }
 
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
@@ -70,6 +71,7 @@ fun SettingsScreen(viewModel: MainViewModel) {
         authorName = config.authorName
         authorEmail = config.authorEmail
         useForegroundService = config.useForegroundService
+        alwaysShowThought = config.alwaysShowThought
     }
 
     Column(
@@ -210,7 +212,8 @@ fun SettingsScreen(viewModel: MainViewModel) {
                                     githubToken = githubToken,
                                     repoUrl = repoUrl,
                                     authorName = authorName,
-                                    authorEmail = authorEmail
+                                    authorEmail = authorEmail,
+                                    alwaysShowThought = alwaysShowThought
                                 )
                             )
                             viewModel.fetchModels()
@@ -443,6 +446,45 @@ fun SettingsScreen(viewModel: MainViewModel) {
             }
         }
 
+        // ---- Thought Visuals Section ----
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(4.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceContainer
+            )
+        ) {
+            Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(
+                        Icons.Outlined.AutoAwesome, 
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.secondary, 
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        "Pensamento da IA", 
+                        fontWeight = FontWeight.SemiBold,
+                        style = MaterialTheme.typography.titleSmall,
+                        modifier = Modifier.weight(1f)
+                    )
+                    Switch(
+                        checked = alwaysShowThought,
+                        onCheckedChange = { alwaysShowThought = it }
+                    )
+                }
+                Text(
+                    text = "Mostra o raciocínio interno/pensamento do agente automaticamente expandido por padrão na tela de chat.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+
         // ---- Save Button ----
         Button(
             onClick = {
@@ -456,7 +498,8 @@ fun SettingsScreen(viewModel: MainViewModel) {
                         repoUrl = repoUrl,
                         authorName = authorName,
                         authorEmail = authorEmail,
-                        useForegroundService = useForegroundService
+                        useForegroundService = useForegroundService,
+                        alwaysShowThought = alwaysShowThought
                     )
                 )
             },
