@@ -242,13 +242,35 @@ object ToolExecutor {
 
     private suspend fun executeBrowserClick(args: Map<String, String>): String {
         val selector = args["selector"] ?: throw IllegalArgumentException("Seletor CSS não especificado.")
-        // JS command to find the element, highlight it, then click it
+        // JS command to find the element, highlight it, calculate center, and dispatch click + mouse events
         val js = """
             (function() {
                 var el = document.querySelector('$selector');
                 if (el) {
-                    el.style.border = '2px solid red';
-                    el.click();
+                    el.style.border = '2px dashed #ff79c6';
+                    
+                    // 1. Standard click
+                    try { el.click(); } catch(e) {}
+                    
+                    // 2. Dispatch MouseEvents to be compatible with modern frameworks (React, Angular, Vue, etc.)
+                    try {
+                        var rect = el.getBoundingClientRect();
+                        var x = rect.left + rect.width / 2;
+                        var y = rect.top + rect.height / 2;
+                        
+                        var events = ['mousedown', 'mouseup', 'click'];
+                        events.forEach(function(evtType) {
+                            var clickEvent = new MouseEvent(evtType, {
+                                view: window,
+                                bubbles: true,
+                                cancelable: true,
+                                clientX: x,
+                                clientY: y
+                            });
+                            el.dispatchEvent(clickEvent);
+                        });
+                    } catch(e) {}
+                    
                     return 'success';
                 }
                 return 'not_found';

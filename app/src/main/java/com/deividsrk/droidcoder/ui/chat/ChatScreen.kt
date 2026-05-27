@@ -2,6 +2,7 @@ package com.deividsrk.droidcoder.ui.chat
 
 import androidx.compose.animation.*
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -546,11 +547,23 @@ private fun ChatBubble(
                         
                         Spacer(Modifier.height(4.dp))
                         
-                        // Beautiful IDE code block displaying code edits / terminal output!
-                        IdeCodeBlock(
-                            code = message.content,
-                            title = message.toolExecuted ?: "resultado_terminal"
-                        )
+                        val isBrowserTool = remember(message.toolExecuted) {
+                            val name = message.toolExecuted?.lowercase() ?: ""
+                            name == "browser_navigate" || name == "browser_click" || name == "browser_type" || name == "browser_get_contents"
+                        }
+
+                        if (isBrowserTool) {
+                            WebPreviewBlock(
+                                toolName = message.toolExecuted ?: "browser_preview",
+                                toolResult = message.content
+                            )
+                        } else {
+                            // Beautiful IDE code block displaying code edits / terminal output!
+                            IdeCodeBlock(
+                                code = message.content,
+                                title = message.toolExecuted ?: "resultado_terminal"
+                            )
+                        }
                     }
                 }
             } else {
@@ -1078,6 +1091,329 @@ private fun HtmlPreviewDialog(
                             webViewClient = android.webkit.WebViewClient()
                             
                             loadDataWithBaseURL(null, htmlCode, "text/html", "UTF-8", null)
+                        }
+                    },
+                    modifier = Modifier.fillMaxSize().weight(1f)
+                )
+            }
+        }
+    }
+}
+
+
+@Composable
+private fun WebPreviewBlock(
+    toolName: String,
+    toolResult: String,
+    modifier: Modifier = Modifier
+) {
+    val browserUrl by com.deividsrk.droidcoder.browser.BrowserManager.url.collectAsStateWithLifecycle()
+    var showFullscreen by remember { mutableStateOf(false) }
+
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(4.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = Color(0xFF050608) // deep dark IDE bg
+        ),
+        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF282A36))
+    ) {
+        Column {
+            // macOS style title tab bar
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(Color(0xFF1E1F29))
+                    .padding(horizontal = 12.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    // macOS window dots
+                    Box(modifier = Modifier.size(8.dp).background(Color(0xFFFF5F56), CircleShape))
+                    Box(modifier = Modifier.size(8.dp).background(Color(0xFFFFBD2E), CircleShape))
+                    Box(modifier = Modifier.size(8.dp).background(Color(0xFF27C93F), CircleShape))
+                    Spacer(Modifier.width(4.dp))
+                    Text(
+                        text = "navegador: $browserUrl",
+                        style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
+                        color = Color(0xFFA6ACCD),
+                        fontFamily = FontFamily.Monospace,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.width(180.dp)
+                    )
+                }
+
+                IconButton(
+                    onClick = { showFullscreen = true },
+                    modifier = Modifier.size(24.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.OpenInNew,
+                        contentDescription = "Expandir Navegador",
+                        tint = Color(0xFFFF79C6), // Dracula pink
+                        modifier = Modifier.size(14.dp)
+                    )
+                }
+            }
+
+            // WebView Preview Container
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(160.dp)
+                    .background(Color(0xFF000000))
+            ) {
+                // We render a mini static-like WebView that keeps track of the URL
+                androidx.compose.ui.viewinterop.AndroidView(
+                    factory = { context ->
+                        android.webkit.WebView(context).apply {
+                            layoutParams = android.view.ViewGroup.LayoutParams(
+                                android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                                android.view.ViewGroup.LayoutParams.MATCH_PARENT
+                            )
+                            settings.javaScriptEnabled = true
+                            settings.domStorageEnabled = true
+                            settings.useWideViewPort = true
+                            settings.loadWithOverviewMode = true
+                            webViewClient = android.webkit.WebViewClient()
+                            loadUrl(browserUrl)
+                        }
+                    },
+                    update = { webView ->
+                        if (webView.url != browserUrl) {
+                            webView.loadUrl(browserUrl)
+                        }
+                    },
+                    modifier = Modifier.fillMaxSize()
+                )
+
+                // Glass click overlay to open fullscreen browser dialog
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color.Transparent)
+                        .clickable {
+                            showFullscreen = true
+                        }
+                )
+            }
+
+            // Tool execution output summary at the bottom
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(Color(0xFF0C0D12))
+                    .padding(8.dp)
+            ) {
+                Text(
+                    text = toolResult,
+                    style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp),
+                    fontFamily = FontFamily.Monospace,
+                    color = Color(0xFFE2E8F0)
+                )
+            }
+        }
+    }
+
+    if (showFullscreen) {
+        BrowserPreviewDialog(
+            initialUrl = browserUrl,
+            onDismiss = { showFullscreen = false }
+        )
+    }
+}
+
+
+@Composable
+private fun BrowserPreviewDialog(
+    initialUrl: String,
+    onDismiss: () -> Unit
+) {
+    var currentUrl by remember { mutableStateOf(initialUrl) }
+    var inputUrl by remember { mutableStateOf(initialUrl) }
+    val context = androidx.compose.ui.platform.LocalContext.current
+
+    androidx.compose.ui.window.Dialog(
+        onDismissRequest = onDismiss,
+        properties = androidx.compose.ui.window.DialogProperties(
+            usePlatformDefaultWidth = false // full screen dialog!
+        )
+    ) {
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            color = Color(0xFF000000) // Pure AMOLED black background
+        ) {
+            Column(modifier = Modifier.fillMaxSize()) {
+                // Header/Toolbar
+                Surface(
+                    modifier = Modifier.fillMaxWidth().border(width = (0.5).dp, color = Color(0xFF282A36)),
+                    color = Color(0xFF0C0D12)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 12.dp, vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        // macOS dots
+                        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                            Box(modifier = Modifier.size(8.dp).background(Color(0xFFFF5F56), CircleShape))
+                            Box(modifier = Modifier.size(8.dp).background(Color(0xFFFFBD2E), CircleShape))
+                            Box(modifier = Modifier.size(8.dp).background(Color(0xFF27C93F), CircleShape))
+                        }
+                        Spacer(Modifier.width(4.dp))
+
+                        // Dialog Title
+                        Text(
+                            text = "Navegador da IA",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFFF8F8F2),
+                            modifier = Modifier.padding(end = 8.dp)
+                        )
+
+                        Spacer(Modifier.weight(1f))
+
+                        // Close Dialog button
+                        IconButton(onClick = onDismiss, modifier = Modifier.size(28.dp)) {
+                            Icon(
+                                imageVector = Icons.Filled.Close,
+                                contentDescription = "Fechar",
+                                tint = Color(0xFFFF5555),
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                    }
+                }
+
+                // WebView and full controls, similar to EmbeddedAppBrowser
+                var webViewRef: android.webkit.WebView? by remember { mutableStateOf(null) }
+
+                // Browser control bar (Back, Reload, Address Bar)
+                Surface(
+                    modifier = Modifier.fillMaxWidth().border(width = (0.5).dp, color = Color(0xFF282A36)),
+                    color = Color(0xFF0C0D12)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        IconButton(
+                            onClick = { webViewRef?.let { if (it.canGoBack()) it.goBack() } },
+                            modifier = Modifier.size(24.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.ArrowBack,
+                                contentDescription = "Voltar",
+                                tint = Color(0xFF6272A4),
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
+                        IconButton(
+                            onClick = { webViewRef?.reload() },
+                            modifier = Modifier.size(24.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.Refresh,
+                                contentDescription = "Atualizar",
+                                tint = Color(0xFF6272A4),
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
+
+                        // Address Bar
+                        OutlinedTextField(
+                            value = inputUrl,
+                            onValueChange = { inputUrl = it },
+                            modifier = Modifier.weight(1f).height(34.dp),
+                            textStyle = TextStyle(fontFamily = FontFamily.Monospace, fontSize = 11.sp, color = Color(0xFFF8F8F2)),
+                            singleLine = true,
+                            shape = RoundedCornerShape(4.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedContainerColor = Color(0xFF000000),
+                                unfocusedContainerColor = Color(0xFF000000),
+                                focusedBorderColor = Color(0xFFFF79C6),
+                                unfocusedBorderColor = Color(0xFF282A36),
+                                cursorColor = Color(0xFFFF79C6)
+                            ),
+                            trailingIcon = {
+                                IconButton(
+                                    onClick = {
+                                        var formattedUrl = inputUrl
+                                        if (!formattedUrl.startsWith("http://") && !formattedUrl.startsWith("https://")) {
+                                            formattedUrl = "https://$formattedUrl"
+                                        }
+                                        webViewRef?.loadUrl(formattedUrl)
+                                    },
+                                    modifier = Modifier.size(20.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Filled.ArrowForward,
+                                        contentDescription = "Ir",
+                                        tint = Color(0xFFA6E22E),
+                                        modifier = Modifier.size(12.dp)
+                                    )
+                                }
+                            }
+                        )
+                    }
+                }
+
+                // Interactive WebView
+                androidx.compose.ui.viewinterop.AndroidView(
+                    factory = { context ->
+                        android.webkit.WebView(context).apply {
+                            layoutParams = android.view.ViewGroup.LayoutParams(
+                                android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                                android.view.ViewGroup.LayoutParams.MATCH_PARENT
+                            )
+                            settings.javaScriptEnabled = true
+                            settings.domStorageEnabled = true
+                            settings.useWideViewPort = true
+                            settings.loadWithOverviewMode = true
+                            
+                            webViewClient = object : android.webkit.WebViewClient() {
+                                override fun onPageFinished(view: android.webkit.WebView?, url: String?) {
+                                    super.onPageFinished(view, url)
+                                    if (url != null) {
+                                        currentUrl = url
+                                        inputUrl = url
+                                        com.deividsrk.droidcoder.browser.BrowserManager.navigate(url)
+                                        
+                                        // Update content text
+                                        view?.evaluateJavascript(
+                                            "(function() { return JSON.stringify({ html: document.documentElement.outerHTML, text: document.body.innerText }); })()"
+                                        ) { resultJson ->
+                                            try {
+                                                if (resultJson != null && resultJson != "null") {
+                                                    val cleanJson = resultJson.trim('"').replace("\\\"", "\"").replace("\\\\", "\\")
+                                                    val parser = kotlinx.serialization.json.Json { ignoreUnknownKeys = true }
+                                                    val obj = parser.parseToJsonElement(cleanJson).jsonObject
+                                                    val html = obj["html"]?.jsonPrimitive?.content ?: ""
+                                                    val text = obj["text"]?.jsonPrimitive?.content ?: ""
+                                                    com.deividsrk.droidcoder.browser.BrowserManager.updatePageContent(html, text)
+                                                }
+                                            } catch (e: Exception) {
+                                                view?.evaluateJavascript("document.body.innerText") { textResult ->
+                                                    val cleanText = textResult?.trim('"')?.replace("\\n", "\n") ?: ""
+                                                    com.deividsrk.droidcoder.browser.BrowserManager.updatePageContent("", cleanText)
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            loadUrl(currentUrl)
+                            webViewRef = this
                         }
                     },
                     modifier = Modifier.fillMaxSize().weight(1f)

@@ -43,211 +43,228 @@ fun FileExplorerScreen(viewModel: MainViewModel) {
     var showDeleteConfirm by remember { mutableStateOf<String?>(null) }
     var showHtmlPreview by remember { mutableStateOf(false) }
 
+    var showSidebar by remember { mutableStateOf(true) }
+
+    // Auto-collapse sidebar when a file is selected to maximize workspace, and show it when no file is selected
+    LaunchedEffect(selectedFile) {
+        if (selectedFile != null) {
+            showSidebar = false
+        } else {
+            showSidebar = true
+        }
+    }
+
     Row(
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFF000000)) // Pure AMOLED Black
     ) {
         // File list sidebar
-        Column(
-            modifier = Modifier
-                .width(260.dp)
-                .fillMaxHeight()
-                .border(width = (0.5).dp, color = Color(0xFF282A36)) // Dracula thin border separator
+        AnimatedVisibility(
+            visible = showSidebar || selectedFile == null,
+            enter = expandHorizontally() + fadeIn(),
+            exit = shrinkHorizontally() + fadeOut()
         ) {
-            // Header
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                color = Color(0xFF0C0D12), // Dracula current line gray
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 14.dp, vertical = 12.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            Icons.Outlined.FolderOpen,
-                            contentDescription = null,
-                            tint = Color(0xFF8BE9FD), // Dracula Cyan
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Spacer(Modifier.width(8.dp))
-                        Text(
-                            "REPOSITÓRIO",
-                            fontWeight = FontWeight.ExtraBold,
-                            fontFamily = FontFamily.Monospace,
-                            fontSize = 11.sp,
-                            color = Color(0xFF8BE9FD),
-                            letterSpacing = 1.sp
-                        )
-                    }
-                    IconButton(
-                        onClick = { showNewFileDialog = true },
-                        modifier = Modifier.size(28.dp)
-                    ) {
-                        Icon(
-                            Icons.Filled.Add,
-                            contentDescription = "Novo arquivo",
-                            tint = Color(0xFFA6E22E), // Dracula Green
-                            modifier = Modifier.size(18.dp)
-                        )
-                    }
-                }
-            }
-
-            // File list
-            LazyColumn(
+            Column(
                 modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth()
-                    .background(Color(0xFF000000)),
-                contentPadding = PaddingValues(6.dp),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
+                    .width(260.dp)
+                    .fillMaxHeight()
+                    .border(width = (0.5).dp, color = Color(0xFF282A36)) // Dracula thin border separator
             ) {
-                if (files.isEmpty()) {
-                    item {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(24.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
+                // Header
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    color = Color(0xFF0C0D12), // Dracula current line gray
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 14.dp, vertical = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                Icons.Outlined.FolderOpen,
+                                contentDescription = null,
+                                tint = Color(0xFF8BE9FD), // Dracula Cyan
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(Modifier.width(8.dp))
                             Text(
-                                "Nenhum arquivo.\nSelecione uma pasta ou clone um repositório.",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = Color(0xFF6272A4), // Dracula Comment Gray
-                                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                                "REPOSITÓRIO",
+                                fontWeight = FontWeight.ExtraBold,
+                                fontFamily = FontFamily.Monospace,
+                                fontSize = 11.sp,
+                                color = Color(0xFF8BE9FD),
+                                letterSpacing = 1.sp
+                            )
+                        }
+                        IconButton(
+                            onClick = { showNewFileDialog = true },
+                            modifier = Modifier.size(28.dp)
+                        ) {
+                            Icon(
+                                Icons.Filled.Add,
+                                contentDescription = "Novo arquivo",
+                                tint = Color(0xFFA6E22E), // Dracula Green
+                                modifier = Modifier.size(18.dp)
                             )
                         }
                     }
                 }
 
-                items(files) { file ->
-                    val isSelected = selectedFile == file
-                    Surface(
-                        onClick = { viewModel.selectFile(file) },
-                        modifier = Modifier.fillMaxWidth(),
-                        color = if (isSelected) Color(0xFF1D1F2B) else Color.Transparent, // Dracula Selection
-                        shape = RoundedCornerShape(4.dp),
-                        border = if (isSelected) androidx.compose.foundation.BorderStroke((0.5).dp, Color(0xFFFF79C6)) else null // Dracula Pink border for selection
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 10.dp, vertical = 8.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                Icons.Outlined.InsertDriveFile,
-                                contentDescription = null,
-                                modifier = Modifier.size(16.dp),
-                                tint = if (isSelected) Color(0xFFFF79C6) else Color(0xFF8BE9FD) // Pink if active, else Cyan
-                            )
-                            Spacer(Modifier.width(8.dp))
-                            Text(
-                                text = file,
-                                style = TextStyle(
-                                    fontFamily = FontFamily.Monospace,
-                                    fontSize = 12.sp,
-                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
-                                ),
-                                maxLines = 1,
-                                modifier = Modifier.weight(1f),
-                                color = if (isSelected) Color(0xFFFF79C6) else Color(0xFFF8F8F2)
-                            )
-                            IconButton(
-                                onClick = { showDeleteConfirm = file },
-                                modifier = Modifier.size(24.dp)
+                // File list
+                LazyColumn(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth()
+                        .background(Color(0xFF000000)),
+                    contentPadding = PaddingValues(6.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    if (files.isEmpty()) {
+                        item {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(24.dp),
+                                contentAlignment = Alignment.Center
                             ) {
-                                Icon(
-                                    Icons.Outlined.Delete,
-                                    contentDescription = "Excluir",
-                                    modifier = Modifier.size(14.dp),
-                                    tint = Color(0xFFFF5555).copy(alpha = 0.7f) // Dracula Red
+                                Text(
+                                    "Nenhum arquivo.\nSelecione uma pasta ou clone um repositório.",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = Color(0xFF6272A4), // Dracula Comment Gray
+                                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
                                 )
                             }
                         }
                     }
-                }
-            }
 
-            // Git push panel
-            Surface(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .border(width = (0.5).dp, color = Color(0xFF282A36)),
-                color = Color(0xFF0C0D12)
-            ) {
-                Column(modifier = Modifier.padding(10.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            Icons.Default.CallSplit,
-                            contentDescription = null,
-                            modifier = Modifier.size(15.dp),
-                            tint = Color(0xFFBD93F9) // Dracula Purple
-                        )
-                        Spacer(Modifier.width(6.dp))
-                        Text(
-                            "GIT SYNC",
-                            style = TextStyle(
-                                fontFamily = FontFamily.Monospace,
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = Color(0xFFBD93F9),
-                                letterSpacing = 0.5.sp
-                            )
-                        )
-                    }
-                    Spacer(Modifier.height(8.dp))
-                    OutlinedTextField(
-                        value = commitMessage,
-                        onValueChange = { commitMessage = it },
-                        modifier = Modifier.fillMaxWidth(),
-                        placeholder = { Text("Mensagem do commit...", style = TextStyle(fontFamily = FontFamily.Monospace, fontSize = 11.sp, color = Color(0xFF6272A4))) },
-                        textStyle = TextStyle(fontFamily = FontFamily.Monospace, fontSize = 12.sp, color = Color(0xFFF8F8F2)),
-                        singleLine = true,
-                        shape = RoundedCornerShape(4.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedContainerColor = Color(0xFF000000),
-                            unfocusedContainerColor = Color(0xFF000000),
-                            focusedBorderColor = Color(0xFFFF79C6),
-                            unfocusedBorderColor = Color(0xFF282A36),
-                            cursorColor = Color(0xFFFF79C6)
-                        )
-                    )
-                    Spacer(Modifier.height(8.dp))
-                    Button(
-                        onClick = {
-                            if (commitMessage.isNotBlank()) {
-                                viewModel.commitAndPush(commitMessage.trim())
-                                commitMessage = ""
+                    items(files) { file ->
+                        val isSelected = selectedFile == file
+                        Surface(
+                            onClick = { viewModel.selectFile(file) },
+                            modifier = Modifier.fillMaxWidth(),
+                            color = if (isSelected) Color(0xFF1D1F2B) else Color.Transparent, // Dracula Selection
+                            shape = RoundedCornerShape(4.dp),
+                            border = if (isSelected) androidx.compose.foundation.BorderStroke((0.5).dp, Color(0xFFFF79C6)) else null // Dracula Pink border for selection
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 10.dp, vertical = 8.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    Icons.Outlined.InsertDriveFile,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(16.dp),
+                                    tint = if (isSelected) Color(0xFFFF79C6) else Color(0xFF8BE9FD) // Pink if active, else Cyan
+                                )
+                                Spacer(Modifier.width(8.dp))
+                                Text(
+                                    text = file,
+                                    style = TextStyle(
+                                        fontFamily = FontFamily.Monospace,
+                                        fontSize = 12.sp,
+                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                                    ),
+                                    maxLines = 1,
+                                    modifier = Modifier.weight(1f),
+                                    color = if (isSelected) Color(0xFFFF79C6) else Color(0xFFF8F8F2)
+                                )
+                                IconButton(
+                                    onClick = { showDeleteConfirm = file },
+                                    modifier = Modifier.size(24.dp)
+                                ) {
+                                    Icon(
+                                        Icons.Outlined.Delete,
+                                        contentDescription = "Excluir",
+                                        modifier = Modifier.size(14.dp),
+                                        tint = Color(0xFFFF5555).copy(alpha = 0.7f) // Dracula Red
+                                    )
+                                }
                             }
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        enabled = !isPushing && commitMessage.isNotBlank(),
-                        shape = RoundedCornerShape(4.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFFBD93F9),
-                            contentColor = Color.Black,
-                            disabledContainerColor = Color(0xFF1D1F2B),
-                            disabledContentColor = Color(0xFF6272A4)
-                        )
-                    ) {
-                        if (isPushing) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(14.dp),
-                                strokeWidth = 2.dp,
-                                color = Color.Black
+                        }
+                    }
+                }
+
+                // Git push panel
+                Surface(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .border(width = (0.5).dp, color = Color(0xFF282A36)),
+                    color = Color(0xFF0C0D12)
+                ) {
+                    Column(modifier = Modifier.padding(10.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                Icons.Default.CallSplit,
+                                contentDescription = null,
+                                modifier = Modifier.size(15.dp),
+                                tint = Color(0xFFBD93F9) // Dracula Purple
                             )
-                            Spacer(Modifier.width(8.dp))
-                            Text("Enviando...", style = TextStyle(fontFamily = FontFamily.Monospace, fontSize = 11.sp, fontWeight = FontWeight.Bold))
-                        } else {
-                            Icon(Icons.Filled.Send, contentDescription = null, modifier = Modifier.size(14.dp))
                             Spacer(Modifier.width(6.dp))
-                            Text("Commit & Push", style = TextStyle(fontFamily = FontFamily.Monospace, fontSize = 11.sp, fontWeight = FontWeight.Bold))
+                            Text(
+                                "GIT SYNC",
+                                style = TextStyle(
+                                    fontFamily = FontFamily.Monospace,
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFFBD93F9),
+                                    letterSpacing = 0.5.sp
+                                )
+                            )
+                        }
+                        Spacer(Modifier.height(8.dp))
+                        OutlinedTextField(
+                            value = commitMessage,
+                            onValueChange = { commitMessage = it },
+                            modifier = Modifier.fillMaxWidth(),
+                            placeholder = { Text("Mensagem do commit...", style = TextStyle(fontFamily = FontFamily.Monospace, fontSize = 11.sp, color = Color(0xFF6272A4))) },
+                            textStyle = TextStyle(fontFamily = FontFamily.Monospace, fontSize = 12.sp, color = Color(0xFFF8F8F2)),
+                            singleLine = true,
+                            shape = RoundedCornerShape(4.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedContainerColor = Color(0xFF000000),
+                                unfocusedContainerColor = Color(0xFF000000),
+                                focusedBorderColor = Color(0xFFFF79C6),
+                                unfocusedBorderColor = Color(0xFF282A36),
+                                cursorColor = Color(0xFFFF79C6)
+                            )
+                        )
+                        Spacer(Modifier.height(8.dp))
+                        Button(
+                            onClick = {
+                                if (commitMessage.isNotBlank()) {
+                                    viewModel.commitAndPush(commitMessage.trim())
+                                    commitMessage = ""
+                                }
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            enabled = !isPushing && commitMessage.isNotBlank(),
+                            shape = RoundedCornerShape(4.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFFBD93F9),
+                                contentColor = Color.Black,
+                                disabledContainerColor = Color(0xFF1D1F2B),
+                                disabledContentColor = Color(0xFF6272A4)
+                            )
+                        ) {
+                            if (isPushing) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(14.dp),
+                                    strokeWidth = 2.dp,
+                                    color = Color.Black
+                                )
+                                Spacer(Modifier.width(8.dp))
+                                Text("Enviando...", style = TextStyle(fontFamily = FontFamily.Monospace, fontSize = 11.sp, fontWeight = FontWeight.Bold))
+                            } else {
+                                Icon(Icons.Filled.Send, contentDescription = null, modifier = Modifier.size(14.dp))
+                                Spacer(Modifier.width(6.dp))
+                                Text("Commit & Push", style = TextStyle(fontFamily = FontFamily.Monospace, fontSize = 11.sp, fontWeight = FontWeight.Bold))
+                            }
                         }
                     }
                 }
@@ -282,6 +299,19 @@ fun FileExplorerScreen(viewModel: MainViewModel) {
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier.weight(1f)
                         ) {
+                            IconButton(
+                                onClick = { showSidebar = !showSidebar },
+                                modifier = Modifier.size(28.dp)
+                            ) {
+                                Icon(
+                                    imageVector = if (showSidebar) Icons.Filled.MenuOpen else Icons.Filled.Menu,
+                                    contentDescription = "Alternar Barra Lateral",
+                                    tint = Color(0xFFFF79C6),
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
+                            Spacer(Modifier.width(6.dp))
+
                             Icon(
                                 Icons.Filled.Code,
                                 contentDescription = null,
