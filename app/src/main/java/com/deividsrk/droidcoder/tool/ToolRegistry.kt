@@ -120,4 +120,7 @@ object ToolRegistry {
 
     private fun jsonObjectOf(vararg pairs: Pair<String, JsonObject>): JsonObject =
         buildJsonObject { pairs.forEach { (k, v) -> put(k, v) } }
+
+    private fun jsonObject(vararg pairs: Pair<String, String>): JsonObject =
+        buildJsonObject { pairs.forEach { (k, v) -> put(k, v) } }
 }

@@ -172,7 +172,7 @@ fun FileExplorerScreen(viewModel: MainViewModel) {
                 Column(modifier = Modifier.padding(10.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
-                            Icons.Outlined.GitBranch,
+                            Icons.Default.CallSplit,
                             contentDescription = null,
                             modifier = Modifier.size(16.dp),
                             tint = MaterialTheme.colorScheme.tertiary

@@ -50,7 +50,7 @@ object ToolExecutor {
     private suspend fun executeReadFile(fm: FileManager, args: Map<String, String>): String {
         val path = args["path"] ?: throw IllegalArgumentException("Caminho do arquivo não especificado.")
         val content = fm.readFile(path)
-        return "📄 Conteúdo de \"$path\":\n\`\`\`\n$content\n\`\`\`"
+        return "📄 Conteúdo de \"$path\":\n```\n$content\n```"
     }
 
     private suspend fun executeWriteFile(fm: FileManager, args: Map<String, String>): String {
@@ -66,24 +66,24 @@ object ToolExecutor {
         return "🗑️ Arquivo \"$path\" excluído com sucesso!"
     }
 
-    private fun executeGitStatus(gm: GitManager): String {
+    private suspend fun executeGitStatus(gm: GitManager): String {
         val status = gm.getStatus()
         if (status.isBlank()) return "✅ Repositório limpo. Nenhuma alteração pendente."
         return "📋 Status do Git:\n$status"
     }
 
-    private fun executeGitCommit(gm: GitManager, args: Map<String, String>): String {
+    private suspend fun executeGitCommit(gm: GitManager, args: Map<String, String>): String {
         val message = args["message"] ?: throw IllegalArgumentException("Mensagem de commit não especificada.")
         val sha = gm.commit(message)
         return "✅ Commit efetuado! SHA: $sha"
     }
 
-    private fun executeGitPush(gm: GitManager): String {
+    private suspend fun executeGitPush(gm: GitManager): String {
         gm.push()
         return "✅ Push concluído! Código enviado ao GitHub."
     }
 
-    private fun executeGitClone(gm: GitManager, args: Map<String, String>): String {
+    private suspend fun executeGitClone(gm: GitManager, args: Map<String, String>): String {
         val url = args["url"] ?: throw IllegalArgumentException("URL do repositório não especificada.")
         val branch = args["branch"] ?: "main"
         gm.clone(url, branch)

@@ -96,22 +96,19 @@ fun MainScreen(
                 NavigationBarItem(
                     selected = selectedTab == 0,
                     onClick = { selectedTab = 0 },
-                    icon = { Icon(Icons.Outlined.Chat, contentDescription = null) },
-                    selectedIcon = { Icon(Icons.Filled.Chat, contentDescription = null) },
+                    icon = { Icon(if (selectedTab == 0) Icons.Filled.Chat else Icons.Outlined.Chat, contentDescription = null) },
                     label = { Text("Chat") }
                 )
                 NavigationBarItem(
                     selected = selectedTab == 1,
                     onClick = { selectedTab = 1 },
-                    icon = { Icon(Icons.Outlined.Code, contentDescription = null) },
-                    selectedIcon = { Icon(Icons.Filled.Code, contentDescription = null) },
+                    icon = { Icon(if (selectedTab == 1) Icons.Filled.Code else Icons.Outlined.Code, contentDescription = null) },
                     label = { Text("Arquivos") }
                 )
                 NavigationBarItem(
                     selected = selectedTab == 2,
                     onClick = { selectedTab = 2 },
-                    icon = { Icon(Icons.Outlined.Settings, contentDescription = null) },
-                    selectedIcon = { Icon(Icons.Filled.Settings, contentDescription = null) },
+                    icon = { Icon(if (selectedTab == 2) Icons.Filled.Settings else Icons.Outlined.Settings, contentDescription = null) },
                     label = { Text("Config") }
                 )
             }

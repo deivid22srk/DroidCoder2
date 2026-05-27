@@ -97,7 +97,7 @@ class AgentApi(
                 }
             }
 
-            val bodyStr = json.encodeToString(JsonObject(requestBody))
+            val bodyStr = requestBody.toString()
             val request = Request.Builder()
                 .url("$baseUrl/chat/completions")
                 .header("Authorization", "Bearer ${config.apiKey}")

@@ -217,7 +217,7 @@ fun SettingsScreen(viewModel: MainViewModel) {
         ) {
             Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Outlined.GitBranch, contentDescription = null,
+                    Icon(Icons.Default.CallSplit, contentDescription = null,
                         tint = MaterialTheme.colorScheme.tertiary, modifier = Modifier.size(20.dp))
                     Spacer(Modifier.width(8.dp))
                     Text("GitHub", fontWeight = FontWeight.SemiBold,

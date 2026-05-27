@@ -103,11 +103,9 @@ class AgentCore(
                         )
 
                         // Execute the tool
-                        val argsJson = kotlinx.serialization.json.Json.encodeToString(
-                            kotlinx.serialization.json.buildJsonObject {
-                                toolCall.arguments.forEach { (k, v) -> put(k, v) }
-                            }
-                        )
+                        val argsJson = kotlinx.serialization.json.buildJsonObject {
+                            toolCall.arguments.forEach { (k, v) -> put(k, v) }
+                        }.toString()
                         val toolResult = ToolExecutor.execute(
                             toolCall = ToolCallFunction(
                                 name = toolCall.name,
