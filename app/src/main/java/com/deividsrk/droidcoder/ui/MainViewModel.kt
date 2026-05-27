@@ -117,8 +117,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
      * Fetch available models from the configured API base.
      */
     fun fetchModels() {
-        if (_config.value.apiKey.isBlank()) return
-
         viewModelScope.launch {
             _isLoadingModels.value = true
             agentApi.fetchModels().fold(
