@@ -205,8 +205,27 @@ class AgentApi(
             val toolCall = if (!toolCalls.isNullOrEmpty()) {
                 val tc = toolCalls.first()
                 val args: Map<String, String> = try {
-                    val parsed = json.parseToJsonElement(tc.function.arguments).jsonObject
-                    parsed.mapValues { (_, v) -> v.jsonPrimitive.content }
+                    val argsElement = tc.function.arguments
+                    when (argsElement) {
+                        is JsonObject -> {
+                            argsElement.mapValues { (_, v) ->
+                                if (v is JsonPrimitive) v.content else v.toString()
+                            }
+                        }
+                        is JsonPrimitive -> {
+                            if (argsElement.isString) {
+                                val parsed = json.parseToJsonElement(argsElement.content)
+                                if (parsed is JsonObject) {
+                                    parsed.mapValues { (_, v) -> v.jsonPrimitive.content }
+                                } else {
+                                    emptyMap()
+                                }
+                            } else {
+                                emptyMap()
+                            }
+                        }
+                        else -> emptyMap()
+                    }
                 } catch (e: Exception) {
                     emptyMap()
                 }

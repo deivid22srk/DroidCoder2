@@ -82,7 +82,7 @@ data class ToolFunction(
  */
 @Serializable
 data class ToolCallResponse(
-    val id: String,
+    val id: String = "",
     val type: String = "function",
     val function: ToolCallFunction
 )
@@ -90,7 +90,7 @@ data class ToolCallResponse(
 @Serializable
 data class ToolCallFunction(
     val name: String,
-    val arguments: String  // JSON string
+    val arguments: JsonElement
 )
 
 /**
