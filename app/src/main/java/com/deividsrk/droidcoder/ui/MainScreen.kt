@@ -47,9 +47,9 @@ fun MainScreen(
 
     ModalNavigationDrawer(
         drawerState = drawerState,
-        gesturesEnabled = selectedTab == 0, // only allow swipe drawer on Chat tab
+        gesturesEnabled = selectedTab == 0 || selectedTab == 1, // allow swipe drawer on both Chat and Files tabs
         drawerContent = {
-            if (selectedTab == 0) {
+            if (selectedTab == 0 || selectedTab == 1) {
                 ModalDrawerSheet(
                     drawerContainerColor = Color(0xFF000000), // AMOLED Black
                     drawerContentColor = MaterialTheme.colorScheme.onSurface,
@@ -88,6 +88,7 @@ fun MainScreen(
                         OutlinedButton(
                             onClick = {
                                 viewModel.createNewSession()
+                                selectedTab = 0 // Switch to Chat tab
                                 coroutineScope.launch { drawerState.close() }
                             },
                             modifier = Modifier.fillMaxWidth(),
@@ -112,6 +113,7 @@ fun MainScreen(
                                 Surface(
                                     onClick = {
                                         viewModel.selectSession(session.id)
+                                        selectedTab = 0 // Switch to Chat tab
                                         coroutineScope.launch { drawerState.close() }
                                     },
                                     modifier = Modifier.fillMaxWidth(),
@@ -169,7 +171,7 @@ fun MainScreen(
             topBar = {
                 TopAppBar(
                     navigationIcon = {
-                        if (selectedTab == 0) {
+                        if (selectedTab == 0 || selectedTab == 1) {
                             IconButton(onClick = { coroutineScope.launch { drawerState.open() } }) {
                                 Icon(
                                     imageVector = Icons.Filled.Menu,
