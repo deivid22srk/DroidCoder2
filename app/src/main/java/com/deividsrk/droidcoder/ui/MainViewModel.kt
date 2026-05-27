@@ -193,6 +193,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     /**
+     * Update file content during editing.
+     */
+    fun updateFileContent(newContent: String) {
+        _fileContent.value = newContent
+    }
+
+    /**
      * Select a file for editing.
      */
     fun selectFile(path: String) {

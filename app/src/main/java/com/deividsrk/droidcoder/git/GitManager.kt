@@ -156,8 +156,7 @@ class GitManager(
 
             val push = git.push()
                 .setCredentialsProvider(UsernamePasswordCredentialsProvider(getToken(), ""))
-                .setForce(true)
-                .setPushAll()
+                .setForce(false)
 
             push.call().forEach { result ->
                 result.messages?.let { msg ->

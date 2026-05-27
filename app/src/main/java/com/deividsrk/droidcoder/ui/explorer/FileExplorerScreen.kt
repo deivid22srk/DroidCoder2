@@ -274,7 +274,7 @@ fun FileExplorerScreen(viewModel: MainViewModel) {
                 ) {
                     BasicTextField(
                         value = fileContent,
-                        onValueChange = { /* handled by ViewModel via state hoisting */ },
+                        onValueChange = { viewModel.updateFileContent(it) },
                         modifier = Modifier.fillMaxSize(),
                         textStyle = TextStyle(
                             fontFamily = FontFamily.Monospace,

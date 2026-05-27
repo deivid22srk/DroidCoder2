@@ -5,10 +5,7 @@ project("droidcoder_native")
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Find OpenSSL (for SHA-256)
-find_package(OpenSSL REQUIRED)
-
-# Native library
+# Native library (OpenSSL hashing is done via Kotlin fallback)
 add_library(
     droidcoder_native
     SHARED
@@ -18,7 +15,6 @@ add_library(
 # Link libraries
 target_link_libraries(
     droidcoder_native
-    OpenSSL::Crypto
     android
     log
 )

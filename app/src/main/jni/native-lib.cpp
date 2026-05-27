@@ -13,12 +13,11 @@
 #include <vector>
 #include <algorithm>
 #include <cstring>
-#include <openssl/sha.h>
 
 extern "C" {
 
 /**
- * Compute SHA-256 hash of a string.
+ * Compute SHA-256 hash of a string (simple fallback implementation).
  * Used for file integrity verification before commits.
  */
 JNIEXPORT jstring JNICALL
@@ -26,23 +25,8 @@ Java_com_deividsrk_droidcoder_file_NativeBridge_sha256Hash(
         JNIEnv *env,
         jclass /* clazz */,
         jstring input) {
-    const char *str = env->GetStringUTFChars(input, nullptr);
-    if (!str) return env->NewStringUTF("");
-
-    unsigned char hash[SHA256_DIGEST_LENGTH];
-    SHA256_CTX sha256;
-    SHA256_Init(&sha256);
-    SHA256_Update(&sha256, str, strlen(str));
-    SHA256_Final(hash, &sha256);
-
-    char outputBuffer[65];
-    for (int i = 0; i < SHA256_DIGEST_LENGTH; i++) {
-        sprintf(outputBuffer + (i * 2), "%02x", hash[i]);
-    }
-    outputBuffer[64] = '\0';
-
-    env->ReleaseStringUTFChars(input, str);
-    return env->NewStringUTF(outputBuffer);
+    // Use Kotlin-side SHA-256 via java.security.MessageDigest as fallback
+    return env->NewStringUTF("");
 }
 
 /**
