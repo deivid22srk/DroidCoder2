@@ -12,7 +12,6 @@
 
     <!-- Code bracket < -->
     <path
-        android:fillColor="#818CF8"
         android:pathData="M38,40 L28,54 L38,68"
         android:strokeWidth="4"
         android:strokeColor="#818CF8"
@@ -29,7 +28,6 @@
 
     <!-- Code bracket > -->
     <path
-        android:fillColor="#10B981"
         android:pathData="M70,40 L80,54 L70,68"
         android:strokeWidth="4"
         android:strokeColor="#10B981"
