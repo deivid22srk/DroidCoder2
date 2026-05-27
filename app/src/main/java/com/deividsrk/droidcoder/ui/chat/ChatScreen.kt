@@ -757,6 +757,12 @@ private fun IdeCodeBlock(
     val clipboardManager = LocalClipboardManager.current
     val context = LocalContext.current
 
+    val isHtml = remember(code, title) {
+        (title != null && (title.endsWith(".html") || title.contains(".html"))) || 
+        code.contains("<!DOCTYPE html>", ignoreCase = true) || 
+        code.contains("<html", ignoreCase = true)
+    }
+
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(4.dp),
@@ -792,20 +798,46 @@ private fun IdeCodeBlock(
                     )
                 }
 
-                // Copy button
-                IconButton(
-                    onClick = {
-                        clipboardManager.setText(AnnotatedString(code))
-                        Toast.makeText(context, "Copiado!", Toast.LENGTH_SHORT).show()
-                    },
-                    modifier = Modifier.size(24.dp)
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Icon(
-                        Icons.Outlined.ContentCopy,
-                        contentDescription = "Copiar código",
-                        tint = Color(0xFFA6ACCD),
-                        modifier = Modifier.size(14.dp)
-                    )
+                    if (isHtml) {
+                        var showPreview by remember { mutableStateOf(false) }
+                        IconButton(
+                            onClick = { showPreview = true },
+                            modifier = Modifier.size(24.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.PlayArrow,
+                                contentDescription = "Visualizar HTML",
+                                tint = Color(0xFFA6E22E),
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
+
+                        if (showPreview) {
+                            HtmlPreviewDialog(
+                                htmlCode = code,
+                                onDismiss = { showPreview = false }
+                            )
+                        }
+                    }
+
+                    IconButton(
+                        onClick = {
+                            clipboardManager.setText(AnnotatedString(code))
+                            Toast.makeText(context, "Copiado!", Toast.LENGTH_SHORT).show()
+                        },
+                        modifier = Modifier.size(24.dp)
+                    ) {
+                        Icon(
+                            Icons.Outlined.ContentCopy,
+                            contentDescription = "Copiar código",
+                            tint = Color(0xFFA6ACCD),
+                            modifier = Modifier.size(14.dp)
+                        )
+                    }
                 }
             }
 
@@ -981,6 +1013,9 @@ private fun highlightCode(text: String): AnnotatedString {
             // 4. Identifiers (Keywords, Types, Annotations)
             if (char.isLetter() || char == '_' || char == '@') {
                 val start = index
+                if (text[index] == '@') {
+                    index++
+                }
                 while (index < length && (text[index].isLetterOrDigit() || text[index] == '_')) {
                     index++
                 }
@@ -1027,6 +1062,82 @@ private fun highlightCode(text: String): AnnotatedString {
                 append(char)
             }
             index++
+        }
+    }
+}
+
+@Composable
+private fun HtmlPreviewDialog(
+    htmlCode: String,
+    onDismiss: () -> Unit
+) {
+    androidx.compose.ui.window.Dialog(
+        onDismissRequest = onDismiss,
+        properties = androidx.compose.ui.window.DialogProperties(
+            usePlatformDefaultWidth = false // full screen dialog!
+        )
+    ) {
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            color = Color(0xFF000000) // Pure AMOLED black background
+        ) {
+            Column(modifier = Modifier.fillMaxSize()) {
+                // Header bar
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(Color(0xFF0C0D12))
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Icon(
+                            imageVector = Icons.Filled.PlayArrow,
+                            contentDescription = null,
+                            tint = Color(0xFFA6E22E),
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Text(
+                            text = "Visualização HTML em Tela Cheia",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFFF8F8F2)
+                        )
+                    }
+                    
+                    // Close button
+                    IconButton(onClick = onDismiss, modifier = Modifier.size(28.dp)) {
+                        Icon(
+                            imageVector = Icons.Filled.Close,
+                            contentDescription = "Fechar",
+                            tint = Color(0xFFFF5555),
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                }
+                
+                // WebView container
+                androidx.compose.ui.viewinterop.AndroidView(
+                    factory = { context ->
+                        android.webkit.WebView(context).apply {
+                            layoutParams = android.view.ViewGroup.LayoutParams(
+                                android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                                android.view.ViewGroup.LayoutParams.MATCH_PARENT
+                            )
+                            settings.javaScriptEnabled = true
+                            settings.domStorageEnabled = true
+                            settings.useWideViewPort = true
+                            settings.loadWithOverviewMode = true
+                            
+                            webViewClient = android.webkit.WebViewClient()
+                            
+                            loadDataWithBaseURL(null, htmlCode, "text/html", "UTF-8", null)
+                        }
+                    },
+                    modifier = Modifier.fillMaxSize().weight(1f)
+                )
+            }
         }
     }
 }
