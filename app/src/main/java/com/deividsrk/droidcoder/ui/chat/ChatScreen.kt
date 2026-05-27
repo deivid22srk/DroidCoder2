@@ -695,6 +695,30 @@ private fun getToolTheme(toolName: String?): ToolTheme {
             badgeColor = Color(0xFF0369A1), // sky container
             badgeTextColor = Color(0xFFBAE6FD)
         )
+        "edit_file" -> ToolTheme(
+            friendlyName = "Editando Arquivo",
+            icon = Icons.Outlined.Edit,
+            badgeColor = Color(0xFF0F5A47), // teal container
+            badgeTextColor = Color(0xFF91F2D9)
+        )
+        "search_grep" -> ToolTheme(
+            friendlyName = "Pesquisa Boyer-Moore C++",
+            icon = Icons.Outlined.Search,
+            badgeColor = Color(0xFF831843), // pink container
+            badgeTextColor = Color(0xFFFBCFE8)
+        )
+        "count_stats" -> ToolTheme(
+            friendlyName = "Estatísticas C++",
+            icon = Icons.Outlined.Analytics,
+            badgeColor = Color(0xFF065F46), // green container
+            badgeTextColor = Color(0xFFA7F3D0)
+        )
+        "web_fetch" -> ToolTheme(
+            friendlyName = "Navegando na Web",
+            icon = Icons.Outlined.Language,
+            badgeColor = Color(0xFF075985), // light blue container
+            badgeTextColor = Color(0xFFE0F2FE)
+        )
         else -> ToolTheme(
             friendlyName = toolName ?: "Executando Ação",
             icon = Icons.Outlined.Build,

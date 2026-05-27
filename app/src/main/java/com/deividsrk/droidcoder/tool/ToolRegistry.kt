@@ -88,6 +88,62 @@ object ToolRegistry {
             required = listOf("url")
         ),
         tool(
+            name = "edit_file",
+            description = "Faz uma substituição precisa de um bloco de texto específico por um novo texto dentro de um arquivo existente. Use esta ferramenta preferencialmente em vez de write_file para pequenas modificações.",
+            params = jsonObjectOf(
+                "path" to jsonObject(
+                    "type" to "string",
+                    "description" to "Caminho relativo do arquivo no projeto."
+                ),
+                "target" to jsonObject(
+                    "type" to "string",
+                    "description" to "O bloco exato de texto a ser substituído. Deve corresponder perfeitamente, caractere por caractere (incluindo espaços e quebras de linha)."
+                ),
+                "replacement" to jsonObject(
+                    "type" to "string",
+                    "description" to "O novo bloco de texto que substituirá o texto alvo."
+                )
+            ),
+            required = listOf("path", "target", "replacement")
+        ),
+        tool(
+            name = "search_grep",
+            description = "Pesquisa recursiva rápida por um padrão de texto ou palavra-chave dentro de todos os arquivos de texto do projeto usando o algoritmo nativo Boyer-Moore-Horspool em C++.",
+            params = jsonObjectOf(
+                "query" to jsonObject(
+                    "type" to "string",
+                    "description" to "O texto ou palavra-chave a ser pesquisada."
+                ),
+                "extension" to jsonObject(
+                    "type" to "string",
+                    "description" to "Opcional: Filtrar a pesquisa por extensão de arquivo (ex: 'kt', 'cpp', 'xml')."
+                )
+            ),
+            required = listOf("query")
+        ),
+        tool(
+            name = "count_stats",
+            description = "Analisa estatísticas textuais avançadas de um arquivo específico (contagem de linhas, palavras e caracteres) processadas nativamente em C++ de alta performance.",
+            params = jsonObjectOf(
+                "path" to jsonObject(
+                    "type" to "string",
+                    "description" to "Caminho relativo do arquivo no projeto."
+                )
+            ),
+            required = listOf("path")
+        ),
+        tool(
+            name = "web_fetch",
+            description = "Baixa e extrai o conteúdo de texto legível de qualquer URL da web (útil para ler documentações externas ou artigos técnicos).",
+            params = jsonObjectOf(
+                "url" to jsonObject(
+                    "type" to "string",
+                    "description" to "A URL completa a ser consultada."
+                )
+            ),
+            required = listOf("url")
+        ),
+        tool(
             name = "finish",
             description = "Finaliza a tarefa atual e apresenta o resumo do que foi realizado ao usuário.",
             params = jsonObjectOf()
