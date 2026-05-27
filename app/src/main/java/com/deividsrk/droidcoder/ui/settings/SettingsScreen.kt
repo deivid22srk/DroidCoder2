@@ -19,6 +19,9 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.deividsrk.droidcoder.ui.MainViewModel
+import androidx.compose.ui.platform.LocalContext
+import android.widget.Toast
+import android.os.Build
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -43,6 +46,20 @@ fun SettingsScreen(viewModel: MainViewModel) {
     var cloneUrl by remember { mutableStateOf("") }
     var cloneBranch by remember { mutableStateOf("main") }
 
+    val context = LocalContext.current
+    var useForegroundService by remember { mutableStateOf(config.useForegroundService) }
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            useForegroundService = true
+        } else {
+            useForegroundService = false
+            Toast.makeText(context, "Permissão de notificação negada. O progresso em segundo plano não será visível.", Toast.LENGTH_LONG).show()
+        }
+    }
+
     LaunchedEffect(config) {
         apiBaseUrl = config.apiBaseUrl
         apiKey = config.apiKey
@@ -52,6 +69,7 @@ fun SettingsScreen(viewModel: MainViewModel) {
         repoUrl = config.repoUrl
         authorName = config.authorName
         authorEmail = config.authorEmail
+        useForegroundService = config.useForegroundService
     }
 
     Column(
@@ -367,6 +385,64 @@ fun SettingsScreen(viewModel: MainViewModel) {
             }
         }
 
+        // ---- Foreground Service Section ----
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceContainer
+            )
+        ) {
+            Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(
+                        Icons.Outlined.NotificationsActive, 
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.secondary, 
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        "Serviço em Segundo Plano", 
+                        fontWeight = FontWeight.SemiBold,
+                        style = MaterialTheme.typography.titleSmall,
+                        modifier = Modifier.weight(1f)
+                    )
+                    Switch(
+                        checked = useForegroundService,
+                        onCheckedChange = { checked ->
+                            if (checked) {
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                    val hasPermission = androidx.core.content.ContextCompat.checkSelfPermission(
+                                        context,
+                                        android.Manifest.permission.POST_NOTIFICATIONS
+                                    ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+
+                                    if (!hasPermission) {
+                                        permissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+                                    } else {
+                                        useForegroundService = true
+                                    }
+                                } else {
+                                    useForegroundService = true
+                                }
+                            } else {
+                                useForegroundService = false
+                            }
+                        }
+                    )
+                }
+                Text(
+                    text = "Executa as tarefas da IA em segundo plano através de um serviço do Android com notificações. Mostra o progresso e as ferramentas executadas em tempo real.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+
         // ---- Save Button ----
         Button(
             onClick = {
@@ -379,7 +455,8 @@ fun SettingsScreen(viewModel: MainViewModel) {
                         githubToken = githubToken,
                         repoUrl = repoUrl,
                         authorName = authorName,
-                        authorEmail = authorEmail
+                        authorEmail = authorEmail,
+                        useForegroundService = useForegroundService
                     )
                 )
             },

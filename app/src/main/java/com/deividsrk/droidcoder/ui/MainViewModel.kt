@@ -6,6 +6,7 @@ import android.net.Uri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.deividsrk.droidcoder.agent.*
+import com.deividsrk.droidcoder.services.AgentForegroundService
 import com.deividsrk.droidcoder.file.FileManager
 import com.deividsrk.droidcoder.git.GitManager
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -181,45 +182,63 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         if (text.isBlank() || _isAgentRunning.value) return
 
         viewModelScope.launch {
-            _isAgentRunning.value = true
-            _agentStatus.value = "Iniciando agente..."
-            _agentThought.value = null
-            _agentTool.value = null
-            _agentToolArgs.value = null
+            try {
+                _isAgentRunning.value = true
+                _agentStatus.value = "Iniciando agente..."
+                _agentThought.value = null
+                _agentTool.value = null
+                _agentToolArgs.value = null
 
-            val mutableHistory = _messages.value.toMutableList()
-
-            agentCore.executeStep(
-                userMessage = text,
-                history = mutableHistory,
-                config = _config.value
-            ) { progress ->
-                _agentStatus.value = progress.status
-                _agentThought.value = progress.thought
-                _agentTool.value = progress.toolName
-                _agentToolArgs.value = progress.toolArgs
-                _messages.value = mutableHistory.toList()
-            }.fold(
-                onSuccess = { response ->
-                    _messages.value = mutableHistory.toList()
-                    refreshFiles()
-                },
-                onFailure = { error ->
-                    mutableHistory.add(
-                        ChatMessage(
-                            role = "assistant",
-                            content = "❌ Erro: ${error.message}"
-                        )
-                    )
-                    _messages.value = mutableHistory.toList()
+                if (_config.value.useForegroundService) {
+                    AgentForegroundService.start(getApplication(), "Iniciando agente de IA...")
                 }
-            )
 
-            _isAgentRunning.value = false
-            _agentStatus.value = ""
-            _agentThought.value = null
-            _agentTool.value = null
-            _agentToolArgs.value = null
+                val mutableHistory = _messages.value.toMutableList()
+
+                agentCore.executeStep(
+                    userMessage = text,
+                    history = mutableHistory,
+                    config = _config.value
+                ) { progress ->
+                    _agentStatus.value = progress.status
+                    _agentThought.value = progress.thought
+                    _agentTool.value = progress.toolName
+                    _agentToolArgs.value = progress.toolArgs
+                    _messages.value = mutableHistory.toList()
+
+                    if (_config.value.useForegroundService) {
+                        val statusText = when {
+                            !progress.toolName.isNullOrBlank() -> "Executando ferramenta: ${progress.toolName}"
+                            !progress.status.isNullOrBlank() -> progress.status
+                            else -> "Pensando..."
+                        }
+                        AgentForegroundService.update(getApplication(), statusText)
+                    }
+                }.fold(
+                    onSuccess = { response ->
+                        _messages.value = mutableHistory.toList()
+                        refreshFiles()
+                    },
+                    onFailure = { error ->
+                        mutableHistory.add(
+                            ChatMessage(
+                                role = "assistant",
+                                content = "❌ Erro: ${error.message}"
+                            )
+                        )
+                        _messages.value = mutableHistory.toList()
+                    }
+                )
+            } finally {
+                if (_config.value.useForegroundService) {
+                    AgentForegroundService.stop(getApplication())
+                }
+                _isAgentRunning.value = false
+                _agentStatus.value = ""
+                _agentThought.value = null
+                _agentTool.value = null
+                _agentToolArgs.value = null
+            }
         }
     }
 
