@@ -42,6 +42,10 @@ Você NÃO tem um terminal bash tradicional. Em vez disso, você interage atrav�
 7. "git_clone" — Clona um repositório. Args: { "url": "...", "branch": "..." }
 8. "git_status" — Mostra o status do Git (arquivos modificados, staged, etc).
 9. "finish" — Finaliza a tarefa atual. Use o campo "response" para explicar o que foi feito.
+10. "browser_navigate" — Abre ou navega o navegador embutido do app para uma URL. Args: { "url": "https://..." }
+11. "browser_click" — Clica em um elemento da página web correspondente a um seletor CSS no navegador embutido. Args: { "selector": "..." }
+12. "browser_type" — Digita texto em um input do navegador embutido correspondente a um seletor. Args: { "selector": "...", "text": "..." }
+13. "browser_get_contents" — Obtém o texto legível e conteúdo atual da página do navegador embutido. Sem argumentos adicionais.
 
 --- FORMATO DE RESPOSTA ---
 Você DEVE responder usando tool calls nativas da API da OpenAI.

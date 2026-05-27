@@ -70,162 +70,205 @@ fun ChatScreen(viewModel: MainViewModel) {
         }
     }
 
-    Column(modifier = Modifier.fillMaxSize()) {
-        // Agent status bar
-        AnimatedVisibility(
-            visible = isAgentRunning,
-            enter = expandVertically() + fadeIn(),
-            exit = shrinkVertically() + fadeOut()
+    var showEmbeddedBrowser by remember { mutableStateOf(false) }
+
+    Row(modifier = Modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier
+                .weight(1.2f)
+                .fillMaxHeight()
         ) {
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 12.dp, vertical = 6.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = Color(0xFF0C0D12) // Dracula AMOLED dark container
-                ),
-                shape = RoundedCornerShape(4.dp),
-                border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
+            // Browser Toggle Toolbar
+            Surface(
+                modifier = Modifier.fillMaxWidth().border(width = (0.5).dp, color = Color(0xFF282A36)),
+                color = Color(0xFF0C0D12)
             ) {
-                Column(modifier = Modifier.padding(12.dp)) {
-                    // Terminal header
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                            // Mac-style window controls
-                            Box(modifier = Modifier.size(10.dp).background(Color(0xFFFF5F56), CircleShape))
-                            Box(modifier = Modifier.size(10.dp).background(Color(0xFFFFBD2E), CircleShape))
-                            Box(modifier = Modifier.size(10.dp).background(Color(0xFF27C93F), CircleShape))
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 14.dp, vertical = 6.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    if (showEmbeddedBrowser) {
+                        val browserUrl by com.deividsrk.droidcoder.browser.BrowserManager.url.collectAsStateWithLifecycle()
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                            Icon(Icons.Outlined.Language, contentDescription = null, modifier = Modifier.size(14.dp), tint = Color(0xFFA6E22E))
+                            Text(
+                                text = browserUrl,
+                                style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp),
+                                color = Color(0xFF8BE9FD), // Dracula Cyan
+                                fontFamily = FontFamily.Monospace,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.width(180.dp)
+                            )
                         }
-                        Text(
-                            text = "droidcoder-cli v2.0",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = Color(0xFF888888),
-                            fontFamily = FontFamily.Monospace
-                        )
+                    } else {
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                            Icon(Icons.Filled.AutoAwesome, contentDescription = null, modifier = Modifier.size(14.dp), tint = Color(0xFFFF79C6))
+                            Text(
+                                text = "MODO AGENTE",
+                                style = TextStyle(fontFamily = FontFamily.Monospace, fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color(0xFFFF79C6))
+                            )
+                        }
                     }
 
-                    // Terminal body
-                    Column(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    Button(
+                        onClick = { showEmbeddedBrowser = !showEmbeddedBrowser },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (showEmbeddedBrowser) Color(0xFF1D1F2B) else Color.Transparent,
+                            contentColor = if (showEmbeddedBrowser) Color(0xFFFF79C6) else Color(0xFF6272A4)
+                        ),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF282A36)),
+                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 2.dp),
+                        shape = RoundedCornerShape(4.dp),
+                        modifier = Modifier.height(26.dp)
                     ) {
-                        Text(
-                            text = "droidcoder@agent:~$ status --watch",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = Color(0xFF888888),
-                            fontFamily = FontFamily.Monospace
+                        Icon(
+                            imageVector = if (showEmbeddedBrowser) Icons.Filled.VisibilityOff else Icons.Outlined.Language, 
+                            contentDescription = null, 
+                            modifier = Modifier.size(12.dp)
                         )
-                        Row(verticalAlignment = Alignment.CenterVertically) {
+                        Spacer(Modifier.width(4.dp))
+                        Text(
+                            text = if (showEmbeddedBrowser) "Ocultar Web" else "Ver Navegador", 
+                            style = TextStyle(fontFamily = FontFamily.Monospace, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                        )
+                    }
+                }
+            }
+
+            // Agent status bar
+            AnimatedVisibility(
+                visible = isAgentRunning,
+                enter = expandVertically() + fadeIn(),
+                exit = shrinkVertically() + fadeOut()
+            ) {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 12.dp, vertical = 6.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = Color(0xFF0C0D12) // Dracula AMOLED dark container
+                    ),
+                    shape = RoundedCornerShape(4.dp),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
+                ) {
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        // Terminal header
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                // Mac-style window controls
+                                Box(modifier = Modifier.size(10.dp).background(Color(0xFFFF5F56), CircleShape))
+                                Box(modifier = Modifier.size(10.dp).background(Color(0xFFFFBD2E), CircleShape))
+                                Box(modifier = Modifier.size(10.dp).background(Color(0xFF27C93F), CircleShape))
+                            }
                             Text(
-                                text = "status: ",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = Color(0xFF00FF00),
-                                fontFamily = FontFamily.Monospace
-                            )
-                            Text(
-                                text = agentStatus,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = Color(0xFFE0E0E0),
+                                text = "droidcoder-cli v2.0",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = Color(0xFF888888),
                                 fontFamily = FontFamily.Monospace
                             )
                         }
-                        if (agentTool != null) {
+
+                        // Terminal body
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
                             Text(
-                                text = "[TOOL] Executando ${agentTool}...",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = Color(0xFF00E5FF),
-                                fontFamily = FontFamily.Monospace,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-                        if (agentToolArgs != null) {
-                            Text(
-                                text = "  ↳ args: { $agentToolArgs }",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = Color(0xFFFFB300),
-                                fontFamily = FontFamily.Monospace
-                            )
-                        }
-                        // Cursor blink line
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(
-                                text = "processing",
+                                text = "droidcoder@agent:~$ status --watch",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = Color(0xFF888888),
                                 fontFamily = FontFamily.Monospace
                             )
-                            Box(
-                                modifier = Modifier
-                                    .padding(start = 4.dp)
-                                    .size(width = 8.dp, height = 12.dp)
-                                    .background(Color(0xFFE0E0E0).copy(alpha = cursorAlpha))
-                            )
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(
+                                    text = "status: ",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = Color(0xFF00FF00),
+                                    fontFamily = FontFamily.Monospace
+                                )
+                                Text(
+                                    text = agentStatus,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = Color(0xFFE0E0E0),
+                                    fontFamily = FontFamily.Monospace
+                                )
+                            }
+                            if (agentTool != null) {
+                                Text(
+                                    text = "[TOOL] Executando ${agentTool}...",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = Color(0xFF00E5FF),
+                                    fontFamily = FontFamily.Monospace
+                                )
+                                if (agentToolArgs != null) {
+                                    Text(
+                                        text = "args: ${agentToolArgs}",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = Color(0xFF888888),
+                                        fontFamily = FontFamily.Monospace,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                }
+                            }
                         }
                     }
                 }
             }
-        }
 
-        // Chat messages
-        LazyColumn(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth(),
-            state = listState,
-            contentPadding = PaddingValues(12.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            if (messages.isEmpty() && !isAgentRunning) {
-                item {
-                    EmptyChatPlaceholder()
+            // Chat messages
+            LazyColumn(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth(),
+                state = listState,
+                contentPadding = PaddingValues(12.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                if (messages.isEmpty() && !isAgentRunning) {
+                    item {
+                        EmptyChatPlaceholder()
+                    }
                 }
-            }
 
-            items(messages, key = { it.id }) { msg ->
-                ChatBubble(
-                    message = msg,
-                    isUser = msg.role == "user",
-                    alwaysShowThought = config.alwaysShowThought
-                )
-            }
-
-            // Live thought display
-            if (isAgentRunning && agentThought != null) {
-                item {
-                    val infiniteTransition = rememberInfiniteTransition(label = "pulse_glow")
-                    val pulseAlpha by infiniteTransition.animateFloat(
-                        initialValue = 0.3f,
-                        targetValue = 0.8f,
-                        animationSpec = infiniteRepeatable(
-                            animation = tween(durationMillis = 800, easing = LinearEasing),
-                            repeatMode = RepeatMode.Reverse
-                        ),
-                        label = "pulseAlpha"
+                items(messages, key = { it.id }) { msg ->
+                    ChatBubble(
+                        message = msg,
+                        isUser = msg.role == "user",
+                        alwaysShowThought = config.alwaysShowThought
                     )
+                }
 
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth(0.85f)
-                            .padding(vertical = 4.dp),
-                        shape = RoundedCornerShape(4.dp),
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceVariant
-                        ),
-                        border = androidx.compose.foundation.BorderStroke(
-                            width = 1.dp,
-                            color = MaterialTheme.colorScheme.primary.copy(alpha = pulseAlpha) // pulsing pink border
+                // Live thought display
+                if (isAgentRunning && agentThought != null) {
+                    item {
+                        val infiniteTransition = rememberInfiniteTransition(label = "pulse_glow")
+                        val pulseAlpha by infiniteTransition.animateFloat(
+                            initialValue = 0.3f,
+                            targetValue = 0.8f,
+                            animationSpec = infiniteRepeatable(
+                                animation = tween(durationMillis = 800, easing = LinearEasing),
+                                repeatMode = RepeatMode.Reverse
+                            ),
+                            label = "pulseAlpha"
                         )
-                    ) {
-                        Column(modifier = Modifier.padding(14.dp)) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
+                        Surface(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(end = 48.dp),
+                            color = Color(0xFF0C0D12).copy(alpha = pulseAlpha),
+                            shape = RoundedCornerShape(4.dp),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFBD93F9).copy(alpha = 0.5f))
+                        ) {
+                            Column(modifier = Modifier.padding(12.dp)) {
                                 Row(
                                     verticalAlignment = Alignment.CenterVertically,
                                     horizontalArrangement = Arrangement.spacedBy(6.dp)
@@ -233,95 +276,96 @@ fun ChatScreen(viewModel: MainViewModel) {
                                     Icon(
                                         Icons.Outlined.AutoAwesome,
                                         contentDescription = null,
-                                        modifier = Modifier.size(14.dp),
-                                        tint = MaterialTheme.colorScheme.primary
+                                        modifier = Modifier.size(12.dp),
+                                        tint = Color(0xFFA78BFA)
                                     )
                                     Text(
-                                        "PENSANDO EM TEMPO REAL...",
-                                        style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 1.sp),
-                                        color = MaterialTheme.colorScheme.primary,
-                                        fontWeight = FontWeight.Bold
+                                        "PENSANDO...",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = Color(0xFFA78BFA),
+                                        fontWeight = FontWeight.Bold,
+                                        letterSpacing = 1.sp
                                     )
                                 }
-
-                                TextButton(
-                                    onClick = { viewModel.cancelCurrentTask() },
-                                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error),
-                                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
-                                    modifier = Modifier.height(24.dp)
-                                ) {
-                                    Icon(Icons.Filled.Stop, contentDescription = null, modifier = Modifier.size(14.dp))
-                                    Spacer(Modifier.width(2.dp))
-                                    Text("Cancelar", style = MaterialTheme.typography.labelSmall)
-                                }
+                                Spacer(Modifier.height(8.dp))
+                                Text(
+                                    text = agentThought!!,
+                                    style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp, lineHeight = 16.sp),
+                                    fontFamily = FontFamily.Monospace,
+                                    color = Color(0xFFDDD6FE)
+                                )
                             }
-                            Spacer(Modifier.height(8.dp))
-                            Text(
-                                text = agentThought!!,
-                                style = MaterialTheme.typography.bodySmall.copy(lineHeight = 15.sp),
-                                fontFamily = FontFamily.Monospace,
-                                color = MaterialTheme.colorScheme.onSurface,
-                                maxLines = 8,
-                                overflow = TextOverflow.Ellipsis
-                            )
                         }
+                    }
+                }
+            }
+
+            // Input area
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                tonalElevation = 4.dp,
+                shadowElevation = 8.dp
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 12.dp, vertical = 10.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    OutlinedTextField(
+                        value = inputText,
+                        onValueChange = { inputText = it },
+                        modifier = Modifier.weight(1f),
+                        placeholder = {
+                            Text(
+                                if (isAgentRunning) "O agente está trabalhando..."
+                                else "Descreva o que deseja fazer com o código...",
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        },
+                        maxLines = 4,
+                        enabled = !isAgentRunning,
+                        shape = RoundedCornerShape(4.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                        )
+                    )
+
+                    FilledIconButton(
+                        onClick = {
+                            if (inputText.isNotBlank()) {
+                                viewModel.sendMessage(inputText.trim())
+                                inputText = ""
+                            }
+                        },
+                        enabled = !isAgentRunning && inputText.isNotBlank(),
+                        modifier = Modifier.size(48.dp),
+                        shape = RoundedCornerShape(4.dp),
+                        colors = IconButtonDefaults.filledIconButtonColors(
+                            containerColor = MaterialTheme.colorScheme.primary,
+                            contentColor = MaterialTheme.colorScheme.onPrimary,
+                            disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                            disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(0.4f)
+                        )
+                    ) {
+                        Icon(Icons.Filled.Send, contentDescription = "Enviar")
                     }
                 }
             }
         }
 
-        // Input area
-        Surface(
-            modifier = Modifier.fillMaxWidth(),
-            tonalElevation = 4.dp,
-            shadowElevation = 8.dp
-        ) {
-            Row(
+        // Collapsible Browser Pane
+        if (showEmbeddedBrowser) {
+            Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 12.dp, vertical = 10.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    .weight(1f)
+                    .fillMaxHeight()
+                    .border(width = (0.5).dp, color = Color(0xFF282A36))
+                    .background(Color(0xFF000000))
             ) {
-                OutlinedTextField(
-                    value = inputText,
-                    onValueChange = { inputText = it },
-                    modifier = Modifier.weight(1f),
-                    placeholder = {
-                        Text(
-                            if (isAgentRunning) "O agente está trabalhando..."
-                            else "Descreva o que deseja fazer com o código...",
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                    },
-                    maxLines = 4,
-                    enabled = !isAgentRunning,
-                    shape = RoundedCornerShape(4.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = MaterialTheme.colorScheme.primary,
-                        unfocusedBorderColor = MaterialTheme.colorScheme.outline
-                    )
-                )
-
-                FilledIconButton(
-                    onClick = {
-                        if (inputText.isNotBlank()) {
-                            viewModel.sendMessage(inputText.trim())
-                            inputText = ""
-                        }
-                    },
-                    enabled = !isAgentRunning && inputText.isNotBlank(),
-                    modifier = Modifier.size(48.dp),
-                    shape = RoundedCornerShape(4.dp),
-                    colors = IconButtonDefaults.filledIconButtonColors(
-                        containerColor = MaterialTheme.colorScheme.primary,
-                        contentColor = MaterialTheme.colorScheme.onPrimary,
-                        disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                        disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(0.4f)
-                    )
-                ) {
-                    Icon(Icons.Filled.Send, contentDescription = "Enviar")
-                }
+                com.deividsrk.droidcoder.ui.browser.EmbeddedAppBrowser()
             }
         }
     }
@@ -736,6 +780,12 @@ private fun getToolTheme(toolName: String?): ToolTheme {
             icon = Icons.Outlined.Language,
             badgeColor = Color(0xFF075985), // light blue container
             badgeTextColor = Color(0xFFE0F2FE)
+        )
+        "browser_navigate", "browser_click", "browser_type", "browser_get_contents" -> ToolTheme(
+            friendlyName = "Navegador do App (IA)",
+            icon = Icons.Outlined.Language,
+            badgeColor = Color(0xFF0F766E), // teal dark
+            badgeTextColor = Color(0xFF99F6E4)
         )
         else -> ToolTheme(
             friendlyName = toolName ?: "Executando Ação",

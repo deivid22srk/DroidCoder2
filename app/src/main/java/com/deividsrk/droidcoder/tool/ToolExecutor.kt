@@ -56,6 +56,10 @@ object ToolExecutor {
                 "git_commit" -> executeGitCommit(gitManager, args)
                 "git_push" -> executeGitPush(gitManager)
                 "git_clone" -> executeGitClone(gitManager, args)
+                "browser_navigate" -> executeBrowserNavigate(args)
+                "browser_click" -> executeBrowserClick(args)
+                "browser_type" -> executeBrowserType(args)
+                "browser_get_contents" -> executeBrowserGetContents()
                 "finish" -> "Tarefa finalizada com sucesso."
                 else -> "Erro: Ferramenta desconhecida \"${toolCall.name}\"."
             }
@@ -224,5 +228,66 @@ object ToolExecutor {
         } catch (e: Exception) {
             "Erro ao fazer fetch de \"$url\": ${e.message}"
         }
+    }
+
+    private suspend fun executeBrowserNavigate(args: Map<String, String>): String {
+        val url = args["url"] ?: throw IllegalArgumentException("URL não especificada.")
+        com.deividsrk.droidcoder.browser.BrowserManager.navigate(url)
+        // Wait for page loading & JS parsing (e.g. 4 seconds)
+        kotlinx.coroutines.delay(4000)
+        val text = com.deividsrk.droidcoder.browser.BrowserManager.getCurrentText()
+        val formattedText = if (text.isBlank()) "[Página carregando ou sem texto legível]" else text.take(3000)
+        return "🌐 Navegado para $url.\n\nConteúdo legível atual da página:\n$formattedText"
+    }
+
+    private suspend fun executeBrowserClick(args: Map<String, String>): String {
+        val selector = args["selector"] ?: throw IllegalArgumentException("Seletor CSS não especificado.")
+        // JS command to find the element, highlight it, then click it
+        val js = """
+            (function() {
+                var el = document.querySelector('$selector');
+                if (el) {
+                    el.style.border = '2px solid red';
+                    el.click();
+                    return 'success';
+                }
+                return 'not_found';
+            })()
+        """.trimIndent()
+        com.deividsrk.droidcoder.browser.BrowserManager.executeJs(js)
+        // Wait for click execution & transition
+        kotlinx.coroutines.delay(2000)
+        val text = com.deividsrk.droidcoder.browser.BrowserManager.getCurrentText()
+        val formattedText = if (text.isBlank()) "[Sem texto legível]" else text.take(3000)
+        return "🖱️ Clique acionado no elemento '$selector'.\n\nConteúdo legível atual da página:\n$formattedText"
+    }
+
+    private suspend fun executeBrowserType(args: Map<String, String>): String {
+        val selector = args["selector"] ?: throw IllegalArgumentException("Seletor não especificado.")
+        val textInput = args["text"] ?: throw IllegalArgumentException("Texto não especificado.")
+        val js = """
+            (function() {
+                var el = document.querySelector('$selector');
+                if (el) {
+                    el.value = '$textInput';
+                    el.dispatchEvent(new Event('input', { bubbles: true }));
+                    el.dispatchEvent(new Event('change', { bubbles: true }));
+                    return 'success';
+                }
+                return 'not_found';
+            })()
+        """.trimIndent()
+        com.deividsrk.droidcoder.browser.BrowserManager.executeJs(js)
+        kotlinx.coroutines.delay(2000)
+        val text = com.deividsrk.droidcoder.browser.BrowserManager.getCurrentText()
+        val formattedText = if (text.isBlank()) "[Sem texto legível]" else text.take(3000)
+        return "⌨️ Digitado '$textInput' no elemento '$selector'.\n\nConteúdo legível atual da página:\n$formattedText"
+    }
+
+    private suspend fun executeBrowserGetContents(): String {
+        val text = com.deividsrk.droidcoder.browser.BrowserManager.getCurrentText()
+        val url = com.deividsrk.droidcoder.browser.BrowserManager.url.value
+        val formattedText = if (text.isBlank()) "[Sem texto legível]" else text
+        return "🌐 URL Atual: $url\n\nConteúdo legível da página:\n$formattedText"
     }
 }

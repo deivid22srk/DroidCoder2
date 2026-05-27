@@ -144,6 +144,48 @@ object ToolRegistry {
             required = listOf("url")
         ),
         tool(
+            name = "browser_navigate",
+            description = "Navega o navegador embutido do aplicativo para uma URL específica.",
+            params = jsonObjectOf(
+                "url" to jsonObject(
+                    "type" to "string",
+                    "description" to "A URL completa para navegar (ex: https://github.com)."
+                )
+            ),
+            required = listOf("url")
+        ),
+        tool(
+            name = "browser_click",
+            description = "Simula um clique em um elemento da página web correspondente a um seletor CSS no navegador embutido.",
+            params = jsonObjectOf(
+                "selector" to jsonObject(
+                    "type" to "string",
+                    "description" to "Seletor CSS ou ID do elemento para clicar (ex: '#submit-btn' ou 'a.login')."
+                )
+            ),
+            required = listOf("selector")
+        ),
+        tool(
+            name = "browser_type",
+            description = "Digita texto em um campo de entrada (input/textarea) correspondente a um seletor CSS no navegador embutido.",
+            params = jsonObjectOf(
+                "selector" to jsonObject(
+                    "type" to "string",
+                    "description" to "Seletor CSS do elemento de entrada."
+                ),
+                "text" to jsonObject(
+                    "type" to "string",
+                    "description" to "O texto a ser digitado."
+                )
+            ),
+            required = listOf("selector", "text")
+        ),
+        tool(
+            name = "browser_get_contents",
+            description = "Obtém o conteúdo HTML e texto legível atual da página do navegador embutido.",
+            params = jsonObjectOf()
+        ),
+        tool(
             name = "finish",
             description = "Finaliza a tarefa atual e apresenta o resumo do que foi realizado ao usuário.",
             params = jsonObjectOf()
