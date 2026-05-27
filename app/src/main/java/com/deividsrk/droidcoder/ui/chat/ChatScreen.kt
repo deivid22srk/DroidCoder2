@@ -81,10 +81,10 @@ fun ChatScreen(viewModel: MainViewModel) {
                     .fillMaxWidth()
                     .padding(horizontal = 12.dp, vertical = 6.dp),
                 colors = CardDefaults.cardColors(
-                    containerColor = Color(0xFF1E1E1E) // Slate dark terminal bg
+                    containerColor = Color(0xFF0C0D12) // Dracula AMOLED dark container
                 ),
-                shape = RoundedCornerShape(12.dp),
-                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF333333))
+                shape = RoundedCornerShape(4.dp),
+                border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
             ) {
                 Column(modifier = Modifier.padding(12.dp)) {
                     // Terminal header
@@ -209,13 +209,13 @@ fun ChatScreen(viewModel: MainViewModel) {
                         modifier = Modifier
                             .fillMaxWidth(0.85f)
                             .padding(vertical = 4.dp),
-                        shape = RoundedCornerShape(16.dp),
+                        shape = RoundedCornerShape(4.dp),
                         colors = CardDefaults.cardColors(
-                            containerColor = Color(0xFF171224) // premium dark violet tint
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant
                         ),
                         border = androidx.compose.foundation.BorderStroke(
                             width = 1.dp,
-                            color = Color(0xFF8B5CF6).copy(alpha = pulseAlpha) // pulsing violet border
+                            color = MaterialTheme.colorScheme.primary.copy(alpha = pulseAlpha) // pulsing pink border
                         )
                     ) {
                         Column(modifier = Modifier.padding(14.dp)) {
@@ -227,12 +227,12 @@ fun ChatScreen(viewModel: MainViewModel) {
                                     Icons.Outlined.AutoAwesome,
                                     contentDescription = null,
                                     modifier = Modifier.size(14.dp),
-                                    tint = Color(0xFFA78BFA)
+                                    tint = MaterialTheme.colorScheme.primary
                                 )
                                 Text(
                                     "PENSANDO EM TEMPO REAL...",
                                     style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 1.sp),
-                                    color = Color(0xFFA78BFA),
+                                    color = MaterialTheme.colorScheme.primary,
                                     fontWeight = FontWeight.Bold
                                 )
                             }
@@ -241,7 +241,7 @@ fun ChatScreen(viewModel: MainViewModel) {
                                 text = agentThought!!,
                                 style = MaterialTheme.typography.bodySmall.copy(lineHeight = 15.sp),
                                 fontFamily = FontFamily.Monospace,
-                                color = Color(0xFFDDD6FE),
+                                color = MaterialTheme.colorScheme.onSurface,
                                 maxLines = 8,
                                 overflow = TextOverflow.Ellipsis
                             )
@@ -277,7 +277,7 @@ fun ChatScreen(viewModel: MainViewModel) {
                     },
                     maxLines = 4,
                     enabled = !isAgentRunning,
-                    shape = RoundedCornerShape(24.dp),
+                    shape = RoundedCornerShape(4.dp),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = MaterialTheme.colorScheme.primary,
                         unfocusedBorderColor = MaterialTheme.colorScheme.outline
@@ -293,7 +293,7 @@ fun ChatScreen(viewModel: MainViewModel) {
                     },
                     enabled = !isAgentRunning && inputText.isNotBlank(),
                     modifier = Modifier.size(48.dp),
-                    shape = CircleShape,
+                    shape = RoundedCornerShape(4.dp),
                     colors = IconButtonDefaults.filledIconButtonColors(
                         containerColor = MaterialTheme.colorScheme.primary,
                         contentColor = MaterialTheme.colorScheme.onPrimary,
@@ -320,7 +320,7 @@ private fun EmptyChatPlaceholder() {
         Box(
             modifier = Modifier
                 .size(64.dp)
-                .clip(RoundedCornerShape(20.dp))
+                .clip(RoundedCornerShape(4.dp))
                 .background(
                     Brush.linearGradient(
                         listOf(
@@ -410,13 +410,13 @@ private fun ChatBubble(
                 val toolTheme = getToolTheme(message.toolExecuted)
                 Card(
                     modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(16.dp),
+                    shape = RoundedCornerShape(4.dp),
                     colors = CardDefaults.cardColors(
-                        containerColor = Color(0xFF111219) // dark IDE container
+                        containerColor = Color(0xFF0C0D12) // Dracula AMOLED dark container
                     ),
                     border = androidx.compose.foundation.BorderStroke(
                         width = 1.dp,
-                        color = Color(0xFF252630)
+                        color = MaterialTheme.colorScheme.outline
                     )
                 ) {
                     Column(modifier = Modifier.padding(12.dp)) {
@@ -492,12 +492,7 @@ private fun ChatBubble(
                 val toolTheme = getToolTheme(message.toolExecuted)
                 
                 Card(
-                    shape = RoundedCornerShape(
-                        topStart = 16.dp,
-                        topEnd = 16.dp,
-                        bottomStart = if (isUser) 16.dp else 4.dp,
-                        bottomEnd = if (isUser) 4.dp else 16.dp
-                    ),
+                    shape = RoundedCornerShape(4.dp),
                     colors = CardDefaults.cardColors(
                         containerColor = if (isUser)
                             MaterialTheme.colorScheme.primaryContainer
@@ -516,11 +511,11 @@ private fun ChatBubble(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(bottom = 10.dp),
-                                color = Color(0xFF19132B), // very subtle purple background for thoughts
-                                shape = RoundedCornerShape(10.dp),
+                                color = Color(0xFF07080B), // pitch-black card background for thoughts
+                                shape = RoundedCornerShape(4.dp),
                                 border = androidx.compose.foundation.BorderStroke(
                                     width = 1.dp,
-                                    color = Color(0xFF3B2F5C)
+                                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
                                 )
                             ) {
                                 Column(modifier = Modifier.padding(10.dp)) {
@@ -583,7 +578,7 @@ private fun ChatBubble(
                         if (hasToolCall) {
                             Surface(
                                 color = toolTheme.badgeColor,
-                                shape = RoundedCornerShape(8.dp),
+                                shape = RoundedCornerShape(3.dp),
                                 modifier = Modifier.padding(bottom = 10.dp)
                             ) {
                                 Row(
@@ -747,9 +742,9 @@ private fun IdeCodeBlock(
 
     Card(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(4.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Color(0xFF12131A) // deep dark IDE bg
+            containerColor = Color(0xFF050608) // deep dark IDE bg
         ),
         border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF282A36))
     ) {

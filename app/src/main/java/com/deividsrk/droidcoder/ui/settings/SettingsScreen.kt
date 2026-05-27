@@ -98,7 +98,7 @@ fun SettingsScreen(viewModel: MainViewModel) {
         // ---- AI Provider Section ----
         Card(
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp),
+            shape = RoundedCornerShape(4.dp),
             colors = CardDefaults.cardColors(
                 containerColor = MaterialTheme.colorScheme.surfaceContainer
             )
@@ -120,7 +120,7 @@ fun SettingsScreen(viewModel: MainViewModel) {
                     placeholder = { Text("https://api.openai.com/v1") },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
-                    shape = RoundedCornerShape(12.dp)
+                    shape = RoundedCornerShape(4.dp)
                 )
 
                 // API Key
@@ -131,7 +131,7 @@ fun SettingsScreen(viewModel: MainViewModel) {
                     placeholder = { Text("sk-... ou chave do Gemini") },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
-                    shape = RoundedCornerShape(12.dp),
+                    shape = RoundedCornerShape(4.dp),
                     visualTransformation = if (showApiKey) VisualTransformation.None
                     else PasswordVisualTransformation(),
                     trailingIcon = {
@@ -161,7 +161,7 @@ fun SettingsScreen(viewModel: MainViewModel) {
                             readOnly = true,
                             label = { Text("Modelo") },
                             modifier = Modifier.menuAnchor(),
-                            shape = RoundedCornerShape(12.dp),
+                            shape = RoundedCornerShape(4.dp),
                             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = modelDropdownExpanded) }
                         )
                         ExposedDropdownMenu(
@@ -234,7 +234,7 @@ fun SettingsScreen(viewModel: MainViewModel) {
                     label = { Text("Temperature (0.0 - 1.0)") },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
-                    shape = RoundedCornerShape(12.dp)
+                    shape = RoundedCornerShape(4.dp)
                 )
             }
         }
@@ -242,7 +242,7 @@ fun SettingsScreen(viewModel: MainViewModel) {
         // ---- GitHub Section ----
         Card(
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp),
+            shape = RoundedCornerShape(4.dp),
             colors = CardDefaults.cardColors(
                 containerColor = MaterialTheme.colorScheme.surfaceContainer
             )
@@ -264,7 +264,7 @@ fun SettingsScreen(viewModel: MainViewModel) {
                     placeholder = { Text("ghp_...") },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
-                    shape = RoundedCornerShape(12.dp),
+                    shape = RoundedCornerShape(4.dp),
                     visualTransformation = if (showGithubToken) VisualTransformation.None
                     else PasswordVisualTransformation(),
                     trailingIcon = {
@@ -285,7 +285,7 @@ fun SettingsScreen(viewModel: MainViewModel) {
                     placeholder = { Text("https://github.com/usuario/projeto.git") },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
-                    shape = RoundedCornerShape(12.dp)
+                    shape = RoundedCornerShape(4.dp)
                 )
 
                 // Author info
@@ -299,7 +299,7 @@ fun SettingsScreen(viewModel: MainViewModel) {
                         label = { Text("Nome do Autor") },
                         modifier = Modifier.weight(1f),
                         singleLine = true,
-                        shape = RoundedCornerShape(12.dp)
+                        shape = RoundedCornerShape(4.dp)
                     )
                     OutlinedTextField(
                         value = authorEmail,
@@ -307,7 +307,7 @@ fun SettingsScreen(viewModel: MainViewModel) {
                         label = { Text("Email") },
                         modifier = Modifier.weight(1f),
                         singleLine = true,
-                        shape = RoundedCornerShape(12.dp)
+                        shape = RoundedCornerShape(4.dp)
                     )
                 }
             }
@@ -316,7 +316,7 @@ fun SettingsScreen(viewModel: MainViewModel) {
         // ---- Clone Repository Section ----
         Card(
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp),
+            shape = RoundedCornerShape(4.dp),
             colors = CardDefaults.cardColors(
                 containerColor = MaterialTheme.colorScheme.surfaceContainer
             )
@@ -341,7 +341,7 @@ fun SettingsScreen(viewModel: MainViewModel) {
                         placeholder = { Text("https://github.com/...") },
                         modifier = Modifier.weight(1f),
                         singleLine = true,
-                        shape = RoundedCornerShape(12.dp)
+                        shape = RoundedCornerShape(4.dp)
                     )
                     OutlinedTextField(
                         value = cloneBranch,
@@ -349,14 +349,14 @@ fun SettingsScreen(viewModel: MainViewModel) {
                         label = { Text("Branch") },
                         modifier = Modifier.width(100.dp),
                         singleLine = true,
-                        shape = RoundedCornerShape(12.dp)
+                        shape = RoundedCornerShape(4.dp)
                     )
                 }
                 Button(
                     onClick = { if (cloneUrl.isNotBlank()) viewModel.cloneRepository(cloneUrl, cloneBranch) },
                     modifier = Modifier.fillMaxWidth(),
                     enabled = !isPushing && cloneUrl.isNotBlank(),
-                    shape = RoundedCornerShape(12.dp)
+                    shape = RoundedCornerShape(4.dp)
                 ) {
                     if (isPushing) {
                         CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
@@ -388,7 +388,7 @@ fun SettingsScreen(viewModel: MainViewModel) {
         // ---- Foreground Service Section ----
         Card(
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp),
+            shape = RoundedCornerShape(4.dp),
             colors = CardDefaults.cardColors(
                 containerColor = MaterialTheme.colorScheme.surfaceContainer
             )
@@ -461,7 +461,7 @@ fun SettingsScreen(viewModel: MainViewModel) {
                 )
             },
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(12.dp),
+            shape = RoundedCornerShape(4.dp),
             contentPadding = PaddingValues(16.dp)
         ) {
             Icon(Icons.Filled.Save, contentDescription = null)

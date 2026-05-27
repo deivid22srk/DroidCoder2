@@ -115,7 +115,7 @@ fun FileExplorerScreen(viewModel: MainViewModel) {
                             MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f)
                         else
                             MaterialTheme.colorScheme.surface,
-                        shape = RoundedCornerShape(8.dp)
+                        shape = RoundedCornerShape(4.dp)
                     ) {
                         Row(
                             modifier = Modifier
@@ -192,7 +192,7 @@ fun FileExplorerScreen(viewModel: MainViewModel) {
                         placeholder = { Text("Mensagem do commit...", style = MaterialTheme.typography.bodySmall) },
                         textStyle = TextStyle(fontSize = 13.sp),
                         singleLine = true,
-                        shape = RoundedCornerShape(8.dp)
+                        shape = RoundedCornerShape(4.dp)
                     )
                     Spacer(Modifier.height(6.dp))
                     Button(
@@ -204,7 +204,7 @@ fun FileExplorerScreen(viewModel: MainViewModel) {
                         },
                         modifier = Modifier.fillMaxWidth(),
                         enabled = !isPushing && commitMessage.isNotBlank(),
-                        shape = RoundedCornerShape(8.dp)
+                        shape = RoundedCornerShape(4.dp)
                     ) {
                         if (isPushing) {
                             CircularProgressIndicator(
@@ -337,7 +337,7 @@ fun FileExplorerScreen(viewModel: MainViewModel) {
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(120.dp),
-                        shape = RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp),
+                        shape = RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp),
                         colors = CardDefaults.cardColors(
                             containerColor = MaterialTheme.colorScheme.surfaceContainer
                         )
