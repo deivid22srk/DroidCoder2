@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">DroidCoder2</string>
+    <string name="title_chat">Chat</string>
+    <string name="title_files">Arquivos</string>
+    <string name="title_settings">Configurações</string>
+    <string name="folder_picker_title">Selecionar pasta do projeto</string>
+    <string name="btn_send">Enviar</string>
+    <string name="btn_save">Salvar</string>
+    <string name="btn_clone">Clonar</string>
+    <string name="btn_commit_push">Commit &amp; Push</string>
+    <string name="hint_message">Descreva o que deseja fazer com o código…</string>
+    <string name="hint_api_key">Chave de API (OpenAI / compatível)</string>
+    <string name="hint_github_token">GitHub Personal Access Token</string>
+    <string name="hint_repo_url">https://github.com/usuario/repo.git</string>
+    <string name="empty_chat">Como posso ajudar hoje?\n\nSou o agente de IA do DroidCoder2. Posso acessar, editar e excluir arquivos do seu projeto, além de enviar código para o GitHub diretamente do seu celular.</string>
+    <string name="empty_files">Nenhum arquivo carregado.\nClone um repositório ou selecione uma pasta local.</string>
+    <string name="agent_thinking">Pensando…</string>
+    <string name="tool_executing">Executando: %1$s</string>
+    <string name="error_api">Erro na API de IA: %1$s</string>
+    <string name="error_network">Erro de conexão. Verifique sua internet.</string>
+</resources>
