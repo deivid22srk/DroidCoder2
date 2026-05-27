@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import kotlinx.coroutines.launch
 import com.deividsrk.droidcoder.ui.chat.ChatScreen
 import com.deividsrk.droidcoder.ui.explorer.FileExplorerScreen
 import com.deividsrk.droidcoder.ui.settings.SettingsScreen
