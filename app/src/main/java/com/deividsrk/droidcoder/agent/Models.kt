@@ -164,6 +164,14 @@ data class ToolCallSpec(
     val arguments: Map<String, String> = emptyMap()
 )
 
+@Serializable
+data class ChatSession(
+    val id: String = randomId(),
+    val title: String,
+    val messages: List<ChatMessage> = emptyList(),
+    val timestamp: Long = System.currentTimeMillis()
+)
+
 private fun randomId() = (1..12).map {
     "abcdefghijklmnopqrstuvwxyz0123456789".random()
 }.joinToString("")

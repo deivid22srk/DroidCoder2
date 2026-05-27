@@ -52,6 +52,28 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    private fun loadSessions(): List<ChatSession> {
+        val jsonString = sharedPreferences.getString("chat_sessions", null)
+        return if (jsonString != null) {
+            try {
+                Json.decodeFromString<List<ChatSession>>(jsonString)
+            } catch (e: Exception) {
+                emptyList()
+            }
+        } else {
+            emptyList()
+        }
+    }
+
+    private fun saveSessions(list: List<ChatSession>) {
+        try {
+            val jsonString = Json.encodeToString(list)
+            sharedPreferences.edit().putString("chat_sessions", jsonString).apply()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
     // Config
     private val _config = MutableStateFlow(loadConfig())
     val config: StateFlow<AppConfig> = _config.asStateFlow()
@@ -59,6 +81,15 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     // Chat
     private val _messages = MutableStateFlow<List<ChatMessage>>(emptyList())
     val messages: StateFlow<List<ChatMessage>> = _messages.asStateFlow()
+
+    // Sessions
+    private val _sessions = MutableStateFlow<List<ChatSession>>(emptyList())
+    val sessions: StateFlow<List<ChatSession>> = _sessions.asStateFlow()
+
+    private val _currentSessionId = MutableStateFlow<String?>(null)
+    val currentSessionId: StateFlow<String?> = _currentSessionId.asStateFlow()
+
+    private var agentJob: kotlinx.coroutines.Job? = null
 
     // Agent running state
     private val _isAgentRunning = MutableStateFlow(false)
@@ -126,6 +157,21 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             gitManager.setProjectRoot(fileManager.projectRoot!!)
             refreshFiles()
         }
+
+        // Initialize chat sessions
+        val loadedSessions = loadSessions()
+        if (loadedSessions.isEmpty()) {
+            val defaultSession = ChatSession(title = "Chat Inicial")
+            _sessions.value = listOf(defaultSession)
+            _currentSessionId.value = defaultSession.id
+            _messages.value = defaultSession.messages
+            saveSessions(_sessions.value)
+        } else {
+            _sessions.value = loadedSessions
+            val lastSession = loadedSessions.first()
+            _currentSessionId.value = lastSession.id
+            _messages.value = lastSession.messages
+        }
     }
 
     /**
@@ -181,7 +227,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun sendMessage(text: String) {
         if (text.isBlank() || _isAgentRunning.value) return
 
-        viewModelScope.launch {
+        agentJob = viewModelScope.launch {
             try {
                 _isAgentRunning.value = true
                 _agentStatus.value = "Iniciando agente..."
@@ -205,6 +251,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     _agentTool.value = progress.toolName
                     _agentToolArgs.value = progress.toolArgs
                     _messages.value = mutableHistory.toList()
+                    updateCurrentSessionMessages(mutableHistory.toList())
 
                     if (_config.value.useForegroundService) {
                         val statusText = when {
@@ -217,6 +264,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 }.fold(
                     onSuccess = { response ->
                         _messages.value = mutableHistory.toList()
+                        updateCurrentSessionMessages(mutableHistory.toList())
                         refreshFiles()
                     },
                     onFailure = { error ->
@@ -227,6 +275,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                             )
                         )
                         _messages.value = mutableHistory.toList()
+                        updateCurrentSessionMessages(mutableHistory.toList())
                     }
                 )
             } finally {
@@ -238,6 +287,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 _agentThought.value = null
                 _agentTool.value = null
                 _agentToolArgs.value = null
+                agentJob = null
             }
         }
     }
@@ -330,7 +380,93 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
      * Clear chat history.
      */
     fun clearChat() {
+        cancelCurrentTask()
         _messages.value = emptyList()
+        updateCurrentSessionMessages(emptyList())
+    }
+
+    private fun updateCurrentSessionMessages(newMessages: List<ChatMessage>) {
+        val currentId = _currentSessionId.value ?: return
+        val updatedSessions = _sessions.value.map { session ->
+            if (session.id == currentId) {
+                val newTitle = if (session.title.startsWith("Chat ") || session.title == "Chat Inicial") {
+                    val firstUserMsg = newMessages.find { it.role == "user" }?.content ?: session.title
+                    if (firstUserMsg.length > 25) firstUserMsg.take(25) + "..." else firstUserMsg
+                } else {
+                    session.title
+                }
+                session.copy(messages = newMessages, title = newTitle)
+            } else {
+                session
+            }
+        }
+        _sessions.value = updatedSessions
+        saveSessions(updatedSessions)
+    }
+
+    fun selectSession(sessionId: String) {
+        cancelCurrentTask()
+        val session = _sessions.value.find { it.id == sessionId } ?: return
+        _currentSessionId.value = sessionId
+        _messages.value = session.messages
+    }
+
+    fun createNewSession() {
+        cancelCurrentTask()
+        val newSession = ChatSession(title = "Chat ${sessions.value.size + 1}")
+        val updated = _sessions.value.toMutableList().apply { add(0, newSession) }
+        _sessions.value = updated
+        _currentSessionId.value = newSession.id
+        _messages.value = newSession.messages
+        saveSessions(updated)
+    }
+
+    fun deleteSession(sessionId: String) {
+        if (_sessions.value.size <= 1) {
+            val clearedSession = ChatSession(title = "Chat Inicial")
+            _sessions.value = listOf(clearedSession)
+            _currentSessionId.value = clearedSession.id
+            _messages.value = emptyList()
+            saveSessions(_sessions.value)
+            return
+        }
+        
+        val isDeletingCurrent = _currentSessionId.value == sessionId
+        val updated = _sessions.value.filter { it.id != sessionId }
+        _sessions.value = updated
+        saveSessions(updated)
+        
+        if (isDeletingCurrent) {
+            val nextSession = updated.first()
+            _currentSessionId.value = nextSession.id
+            _messages.value = nextSession.messages
+        }
+    }
+
+    fun cancelCurrentTask() {
+        if (_isAgentRunning.value) {
+            agentJob?.cancel()
+            agentJob = null
+            _isAgentRunning.value = false
+            _agentStatus.value = "Cancelado pelo usuário."
+            _agentThought.value = null
+            _agentTool.value = null
+            _agentToolArgs.value = null
+            
+            val mutableHistory = _messages.value.toMutableList()
+            mutableHistory.add(
+                ChatMessage(
+                    role = "assistant",
+                    content = "⏹️ Tarefa cancelada pelo usuário."
+                )
+            )
+            _messages.value = mutableHistory.toList()
+            updateCurrentSessionMessages(mutableHistory.toList())
+            
+            if (_config.value.useForegroundService) {
+                AgentForegroundService.stop(getApplication())
+            }
+        }
     }
 
     /**

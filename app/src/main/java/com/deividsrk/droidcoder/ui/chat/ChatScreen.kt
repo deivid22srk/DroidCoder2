@@ -221,20 +221,37 @@ fun ChatScreen(viewModel: MainViewModel) {
                         Column(modifier = Modifier.padding(14.dp)) {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                modifier = Modifier.fillMaxWidth()
                             ) {
-                                Icon(
-                                    Icons.Outlined.AutoAwesome,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(14.dp),
-                                    tint = MaterialTheme.colorScheme.primary
-                                )
-                                Text(
-                                    "PENSANDO EM TEMPO REAL...",
-                                    style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 1.sp),
-                                    color = MaterialTheme.colorScheme.primary,
-                                    fontWeight = FontWeight.Bold
-                                )
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                ) {
+                                    Icon(
+                                        Icons.Outlined.AutoAwesome,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(14.dp),
+                                        tint = MaterialTheme.colorScheme.primary
+                                    )
+                                    Text(
+                                        "PENSANDO EM TEMPO REAL...",
+                                        style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 1.sp),
+                                        color = MaterialTheme.colorScheme.primary,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+
+                                TextButton(
+                                    onClick = { viewModel.cancelCurrentTask() },
+                                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error),
+                                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
+                                    modifier = Modifier.height(24.dp)
+                                ) {
+                                    Icon(Icons.Filled.Stop, contentDescription = null, modifier = Modifier.size(14.dp))
+                                    Spacer(Modifier.width(2.dp))
+                                    Text("Cancelar", style = MaterialTheme.typography.labelSmall)
+                                }
                             }
                             Spacer(Modifier.height(8.dp))
                             Text(
