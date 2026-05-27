@@ -183,7 +183,20 @@ fun SettingsScreen(viewModel: MainViewModel) {
                     }
 
                     FilledTonalButton(
-                        onClick = { viewModel.fetchModels() },
+                        onClick = {
+                            viewModel.updateConfig(
+                                config.copy(
+                                    apiBaseUrl = apiBaseUrl,
+                                    apiKey = apiKey,
+                                    temperature = temperature.toDoubleOrNull() ?: 0.3,
+                                    githubToken = githubToken,
+                                    repoUrl = repoUrl,
+                                    authorName = authorName,
+                                    authorEmail = authorEmail
+                                )
+                            )
+                            viewModel.fetchModels()
+                        },
                         enabled = !isLoadingModels
                     ) {
                         if (isLoadingModels) {
