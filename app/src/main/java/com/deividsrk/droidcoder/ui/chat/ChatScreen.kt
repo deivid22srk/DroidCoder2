@@ -28,6 +28,7 @@ import com.deividsrk.droidcoder.ui.MainViewModel
 import androidx.compose.ui.graphics.Color
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.AnnotatedString
@@ -220,7 +221,7 @@ fun ChatScreen(viewModel: MainViewModel) {
                                 horizontalArrangement = Arrangement.spacedBy(6.dp)
                             ) {
                                 Icon(
-                                    Icons.Outlined.Sparkles,
+                                    Icons.Outlined.AutoAwesome,
                                     contentDescription = null,
                                     modifier = Modifier.size(14.dp),
                                     tint = Color(0xFFA78BFA)
@@ -375,14 +376,19 @@ private fun ChatBubble(
                     modifier = Modifier
                         .size(32.dp)
                         .clip(CircleShape)
-                        .background(
-                            if (message.role == "tool") Color(0xFF1E1E1E)
-                            else Brush.linearGradient(
-                                listOf(
-                                    MaterialTheme.colorScheme.secondary,
-                                    MaterialTheme.colorScheme.tertiary
+                        .then(
+                            if (message.role == "tool") {
+                                Modifier.background(Color(0xFF1E1E1E))
+                            } else {
+                                Modifier.background(
+                                    Brush.linearGradient(
+                                        listOf(
+                                            MaterialTheme.colorScheme.secondary,
+                                            MaterialTheme.colorScheme.tertiary
+                                        )
+                                    )
                                 )
-                            )
+                            }
                         ),
                     contentAlignment = Alignment.Center
                 ) {
@@ -525,7 +531,7 @@ private fun ChatBubble(
                                             horizontalArrangement = Arrangement.spacedBy(6.dp)
                                         ) {
                                             Icon(
-                                                Icons.Outlined.Sparkles,
+                                                Icons.Outlined.AutoAwesome,
                                                 contentDescription = null,
                                                 modifier = Modifier.size(12.dp),
                                                 tint = Color(0xFFA78BFA)
