@@ -28,7 +28,8 @@ class AgentCore(
     data class ProgressUpdate(
         val status: String,
         val thought: String? = null,
-        val toolName: String? = null
+        val toolName: String? = null,
+        val toolArgs: String? = null
     )
 
     /**
@@ -62,7 +63,7 @@ class AgentCore(
                 val result = apiClient.sendMessage(history, systemPrompt)
 
                 result.fold(
-                    onSuccess = { agentResponse ->
+                     onSuccess = { agentResponse ->
                         val thought = agentResponse.thought
                         val toolCall = agentResponse.toolCall
                         val content = agentResponse.response
@@ -73,11 +74,13 @@ class AgentCore(
                         } else {
                             "Concluindo..."
                         }
+                        val argsFormatted = toolCall?.arguments?.entries?.joinToString(", ") { "${it.key}: \"${it.value}\"" }
                         onProgress(
                             ProgressUpdate(
                                 status = status,
                                 thought = thought,
-                                toolName = toolCall?.name
+                                toolName = toolCall?.name,
+                                toolArgs = argsFormatted
                             )
                         )
 
@@ -88,7 +91,8 @@ class AgentCore(
                                 ChatMessage(
                                     role = "assistant",
                                     content = finalResponse,
-                                    thought = thought
+                                    thought = thought,
+                                    toolExecuted = toolCall?.name
                                 )
                             )
                             return@withContext Result.success(finalResponse)
@@ -99,7 +103,8 @@ class AgentCore(
                             ChatMessage(
                                 role = "assistant",
                                 content = content,
-                                thought = thought
+                                thought = thought,
+                                toolExecuted = toolCall.name
                             )
                         )
 
@@ -120,7 +125,8 @@ class AgentCore(
                         history.add(
                             ChatMessage(
                                 role = "tool",
-                                content = "RESULTADO DA FERRAMENTA:\n$toolResult"
+                                content = toolResult,
+                                toolExecuted = toolCall.name
                             )
                         )
 
@@ -128,7 +134,8 @@ class AgentCore(
                             ProgressUpdate(
                                 status = "Resultado obtido, continuando...",
                                 thought = null,
-                                toolName = null
+                                toolName = null,
+                                toolArgs = null
                             )
                         )
                     },

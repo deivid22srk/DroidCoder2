@@ -44,6 +44,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _agentTool = MutableStateFlow<String?>(null)
     val agentTool: StateFlow<String?> = _agentTool.asStateFlow()
 
+    private val _agentToolArgs = MutableStateFlow<String?>(null)
+    val agentToolArgs: StateFlow<String?> = _agentToolArgs.asStateFlow()
+
     // Files
     private val _files = MutableStateFlow<List<String>>(emptyList())
     val files: StateFlow<List<String>> = _files.asStateFlow()
@@ -145,6 +148,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             _agentStatus.value = "Iniciando agente..."
             _agentThought.value = null
             _agentTool.value = null
+            _agentToolArgs.value = null
 
             val mutableHistory = _messages.value.toMutableList()
 
@@ -156,6 +160,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 _agentStatus.value = progress.status
                 _agentThought.value = progress.thought
                 _agentTool.value = progress.toolName
+                _agentToolArgs.value = progress.toolArgs
             }.fold(
                 onSuccess = { response ->
                     _messages.value = mutableHistory.toList()
@@ -176,6 +181,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             _agentStatus.value = ""
             _agentThought.value = null
             _agentTool.value = null
+            _agentToolArgs.value = null
         }
     }
 
