@@ -4,6 +4,7 @@ import com.deividsrk.droidcoder.file.FileManager
 import com.deividsrk.droidcoder.git.GitManager
 import com.deividsrk.droidcoder.tool.ToolExecutor
 import kotlinx.coroutines.*
+import kotlinx.serialization.json.*
 
 /**
  * Core agent execution loop.
