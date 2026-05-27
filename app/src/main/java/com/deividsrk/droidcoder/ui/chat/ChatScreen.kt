@@ -27,6 +27,11 @@ import com.deividsrk.droidcoder.agent.ChatMessage
 import com.deividsrk.droidcoder.ui.MainViewModel
 import androidx.compose.ui.graphics.Color
 import androidx.compose.animation.core.*
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.AnnotatedString
+import android.widget.Toast
 
 @Composable
 fun ChatScreen(viewModel: MainViewModel) {
@@ -185,35 +190,54 @@ fun ChatScreen(viewModel: MainViewModel) {
             // Live thought display
             if (isAgentRunning && agentThought != null) {
                 item {
+                    val infiniteTransition = rememberInfiniteTransition(label = "pulse_glow")
+                    val pulseAlpha by infiniteTransition.animateFloat(
+                        initialValue = 0.3f,
+                        targetValue = 0.8f,
+                        animationSpec = infiniteRepeatable(
+                            animation = tween(durationMillis = 800, easing = LinearEasing),
+                            repeatMode = RepeatMode.Reverse
+                        ),
+                        label = "pulseAlpha"
+                    )
+
                     Card(
-                        modifier = Modifier.fillMaxWidth(0.85f),
+                        modifier = Modifier
+                            .fillMaxWidth(0.85f)
+                            .padding(vertical = 4.dp),
                         shape = RoundedCornerShape(16.dp),
                         colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                            containerColor = Color(0xFF171224) // premium dark violet tint
+                        ),
+                        border = androidx.compose.foundation.BorderStroke(
+                            width = 1.dp,
+                            color = Color(0xFF8B5CF6).copy(alpha = pulseAlpha) // pulsing violet border
                         )
                     ) {
-                        Column(modifier = Modifier.padding(12.dp)) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
+                        Column(modifier = Modifier.padding(14.dp)) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
                                 Icon(
-                                    Icons.Outlined.Psychology,
+                                    Icons.Outlined.Sparkles,
                                     contentDescription = null,
-                                    modifier = Modifier.size(16.dp),
-                                    tint = MaterialTheme.colorScheme.secondary
+                                    modifier = Modifier.size(14.dp),
+                                    tint = Color(0xFFA78BFA)
                                 )
-                                Spacer(Modifier.width(6.dp))
                                 Text(
-                                    "PENSANDO...",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.secondary,
+                                    "PENSANDO EM TEMPO REAL...",
+                                    style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 1.sp),
+                                    color = Color(0xFFA78BFA),
                                     fontWeight = FontWeight.Bold
                                 )
                             }
-                            Spacer(Modifier.height(6.dp))
+                            Spacer(Modifier.height(8.dp))
                             Text(
                                 text = agentThought!!,
-                                style = MaterialTheme.typography.bodySmall,
+                                style = MaterialTheme.typography.bodySmall.copy(lineHeight = 15.sp),
                                 fontFamily = FontFamily.Monospace,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                color = Color(0xFFDDD6FE),
                                 maxLines = 8,
                                 overflow = TextOverflow.Ellipsis
                             )
@@ -353,7 +377,12 @@ private fun ChatBubble(
                         .clip(CircleShape)
                         .background(
                             if (message.role == "tool") Color(0xFF1E1E1E)
-                            else MaterialTheme.colorScheme.secondaryContainer
+                            else Brush.linearGradient(
+                                listOf(
+                                    MaterialTheme.colorScheme.secondary,
+                                    MaterialTheme.colorScheme.tertiary
+                                )
+                            )
                         ),
                     contentAlignment = Alignment.Center
                 ) {
@@ -361,56 +390,98 @@ private fun ChatBubble(
                         if (message.role == "tool") Icons.Filled.Terminal
                         else Icons.Filled.Android,
                         contentDescription = null,
-                        modifier = Modifier.size(18.dp),
-                        tint = if (message.role == "tool") Color(0xFF27C93F)
-                        else MaterialTheme.colorScheme.onSecondaryContainer
+                        modifier = Modifier.size(16.dp),
+                        tint = Color.White
                     )
                 }
                 Spacer(Modifier.width(8.dp))
             }
 
             if (message.role == "tool") {
+                val toolTheme = getToolTheme(message.toolExecuted)
                 Card(
                     modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(
-                        topStart = 16.dp,
-                        topEnd = 16.dp,
-                        bottomStart = 4.dp,
-                        bottomEnd = 16.dp
-                    ),
+                    shape = RoundedCornerShape(16.dp),
                     colors = CardDefaults.cardColors(
-                        containerColor = Color(0xFF1E1E1E) // terminal black
+                        containerColor = Color(0xFF111219) // dark IDE container
                     ),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF333333))
+                    border = androidx.compose.foundation.BorderStroke(
+                        width = 1.dp,
+                        color = Color(0xFF252630)
+                    )
                 ) {
                     Column(modifier = Modifier.padding(12.dp)) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                Icons.Filled.CheckCircle,
-                                contentDescription = null,
-                                modifier = Modifier.size(14.dp),
-                                tint = Color(0xFF27C93F)
-                            )
-                            Spacer(Modifier.width(6.dp))
-                            Text(
-                                text = "RESULTADO: ${message.toolExecuted ?: "Ferramenta"}",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = Color(0xFF27C93F),
-                                fontWeight = FontWeight.Bold,
-                                fontFamily = FontFamily.Monospace
-                            )
+                        // Title/Header Bar
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                // Mini circles
+                                Box(modifier = Modifier.size(8.dp).background(Color(0xFFFF5F56), CircleShape))
+                                Box(modifier = Modifier.size(8.dp).background(Color(0xFFFFBD2E), CircleShape))
+                                Box(modifier = Modifier.size(8.dp).background(Color(0xFF27C93F), CircleShape))
+                                Spacer(Modifier.width(4.dp))
+                                
+                                // Tool Badge
+                                Surface(
+                                    color = toolTheme.badgeColor,
+                                    shape = RoundedCornerShape(6.dp)
+                                ) {
+                                    Row(
+                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                    ) {
+                                        Icon(
+                                            toolTheme.icon,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(10.dp),
+                                            tint = toolTheme.badgeTextColor
+                                        )
+                                        Text(
+                                            text = toolTheme.friendlyName,
+                                            style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp),
+                                            color = toolTheme.badgeTextColor,
+                                            fontWeight = FontWeight.Bold,
+                                            fontFamily = FontFamily.Monospace
+                                        )
+                                    }
+                                }
+                            }
+                            
+                            // Success indicator
+                            Surface(
+                                color = Color(0xFF064E3B),
+                                shape = RoundedCornerShape(4.dp)
+                            ) {
+                                Text(
+                                    text = "SUCESSO",
+                                    modifier = Modifier.padding(horizontal = 5.dp, vertical = 1.dp),
+                                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 8.sp),
+                                    color = Color(0xFF34D399),
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
                         }
-                        Spacer(Modifier.height(8.dp))
-                        Text(
-                            text = message.content,
-                            style = MaterialTheme.typography.bodySmall,
-                            fontFamily = FontFamily.Monospace,
-                            color = Color(0xFFE0E0E0),
-                            modifier = Modifier.fillMaxWidth()
+                        
+                        Spacer(Modifier.height(4.dp))
+                        
+                        // Beautiful IDE code block displaying code edits / terminal output!
+                        IdeCodeBlock(
+                            code = message.content,
+                            title = message.toolExecuted ?: "resultado_terminal"
                         )
                     }
                 }
             } else {
+                val hasToolCall = !isUser && message.toolExecuted != null
+                val toolTheme = getToolTheme(message.toolExecuted)
+                
                 Card(
                     shape = RoundedCornerShape(
                         topStart = 16.dp,
@@ -422,77 +493,109 @@ private fun ChatBubble(
                         containerColor = if (isUser)
                             MaterialTheme.colorScheme.primaryContainer
                         else
-                            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
+                            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                    ),
+                    border = if (isUser) null else androidx.compose.foundation.BorderStroke(
+                        width = 1.dp,
+                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
                     )
                 ) {
-                    Column(modifier = Modifier.padding(12.dp)) {
+                    Column(modifier = Modifier.padding(14.dp)) {
                         // Thought (only for assistant)
                         if (!isUser && message.thought != null) {
-                            TextButton(
-                                onClick = { showThought = !showThought },
-                                modifier = Modifier.fillMaxWidth(),
-                                contentPadding = PaddingValues(0.dp)
+                            Surface(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(bottom = 10.dp),
+                                color = Color(0xFF19132B), // very subtle purple background for thoughts
+                                shape = RoundedCornerShape(10.dp),
+                                border = androidx.compose.foundation.BorderStroke(
+                                    width = 1.dp,
+                                    color = Color(0xFF3B2F5C)
+                                )
                             ) {
-                                Icon(
-                                    Icons.Outlined.Psychology,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(14.dp),
-                                    tint = MaterialTheme.colorScheme.secondary
-                                )
-                                Spacer(Modifier.width(4.dp))
-                                Text(
-                                    "PENSAMENTO DO AGENTE",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.secondary,
-                                    fontWeight = FontWeight.Bold
-                                )
-                                Spacer(Modifier.weight(1f))
-                                Icon(
-                                    if (showThought) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(14.dp),
-                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
+                                Column(modifier = Modifier.padding(10.dp)) {
+                                    TextButton(
+                                        onClick = { showThought = !showThought },
+                                        modifier = Modifier.fillMaxWidth().height(28.dp),
+                                        contentPadding = PaddingValues(0.dp)
+                                    ) {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                        ) {
+                                            Icon(
+                                                Icons.Outlined.Sparkles,
+                                                contentDescription = null,
+                                                modifier = Modifier.size(12.dp),
+                                                tint = Color(0xFFA78BFA)
+                                            )
+                                            Text(
+                                                "PENSAMENTO DO AGENTE",
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = Color(0xFFA78BFA),
+                                                fontWeight = FontWeight.Bold,
+                                                letterSpacing = 1.sp
+                                            )
+                                            Spacer(Modifier.weight(1f))
+                                            Icon(
+                                                if (showThought) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore,
+                                                contentDescription = null,
+                                                modifier = Modifier.size(14.dp),
+                                                tint = Color(0xFFA78BFA)
+                                            )
+                                        }
+                                    }
 
-                            AnimatedVisibility(visible = showThought) {
-                                Text(
-                                    text = message.thought!!,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    fontFamily = FontFamily.Monospace,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    modifier = Modifier.padding(top = 4.dp)
-                                )
+                                    AnimatedVisibility(visible = showThought) {
+                                        Column(modifier = Modifier.padding(top = 6.dp)) {
+                                            Box(
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .height(1.dp)
+                                                    .background(Color(0xFF2D2344))
+                                                    .padding(bottom = 6.dp)
+                                            )
+                                            Spacer(Modifier.height(4.dp))
+                                            Text(
+                                                text = message.thought!!,
+                                                style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp, lineHeight = 16.sp),
+                                                fontFamily = FontFamily.Monospace,
+                                                color = Color(0xFFDDD6FE),
+                                                modifier = Modifier.fillMaxWidth()
+                                            )
+                                        }
+                                    }
+                                }
                             }
-                            Spacer(Modifier.height(6.dp))
                         }
 
                         // Tool Executed Tag (inline indicator)
-                        if (!isUser && message.toolExecuted != null) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier
-                                    .padding(bottom = 6.dp)
-                                    .background(
-                                        color = MaterialTheme.colorScheme.secondaryContainer,
-                                        shape = RoundedCornerShape(6.dp)
-                                    )
-                                    .padding(horizontal = 8.dp, vertical = 4.dp)
+                        if (hasToolCall) {
+                            Surface(
+                                color = toolTheme.badgeColor,
+                                shape = RoundedCornerShape(8.dp),
+                                modifier = Modifier.padding(bottom = 10.dp)
                             ) {
-                                Icon(
-                                    Icons.Filled.Build,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(12.dp),
-                                    tint = MaterialTheme.colorScheme.onSecondaryContainer
-                                )
-                                Spacer(Modifier.width(6.dp))
-                                Text(
-                                    text = "CHAMANDO: ${message.toolExecuted}",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onSecondaryContainer,
-                                    fontWeight = FontWeight.Bold,
-                                    fontFamily = FontFamily.Monospace
-                                )
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                ) {
+                                    Icon(
+                                        toolTheme.icon,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(12.dp),
+                                        tint = toolTheme.badgeTextColor
+                                    )
+                                    Text(
+                                        text = "AÇÃO ACIONADA: ${toolTheme.friendlyName}",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = toolTheme.badgeTextColor,
+                                        fontWeight = FontWeight.Bold,
+                                        fontFamily = FontFamily.Monospace
+                                    )
+                                }
                             }
                         }
 
@@ -516,15 +619,259 @@ private fun ChatBubble(
                     modifier = Modifier
                         .size(32.dp)
                         .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.primaryContainer),
+                        .background(
+                            Brush.linearGradient(
+                                listOf(
+                                    MaterialTheme.colorScheme.primary,
+                                    MaterialTheme.colorScheme.secondary
+                                )
+                            )
+                        ),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         Icons.Filled.Person,
                         contentDescription = null,
-                        modifier = Modifier.size(18.dp),
-                        tint = MaterialTheme.colorScheme.onPrimaryContainer
+                        modifier = Modifier.size(16.dp),
+                        tint = Color.White
                     )
+                }
+            }
+        }
+    }
+}
+
+// ---- Visual Redesign Helper Components ----
+
+data class ToolTheme(
+    val friendlyName: String,
+    val icon: androidx.compose.ui.graphics.vector.ImageVector,
+    val badgeColor: Color,
+    val badgeTextColor: Color
+)
+
+@Composable
+private fun getToolTheme(toolName: String?): ToolTheme {
+    return when (toolName?.lowercase()) {
+        "write_file", "create_file" -> ToolTheme(
+            friendlyName = "Escrevendo Arquivo",
+            icon = Icons.Outlined.Code,
+            badgeColor = Color(0xFF064E3B), // emerald container
+            badgeTextColor = Color(0xFFA7F3D0)
+        )
+        "read_file", "view_file" -> ToolTheme(
+            friendlyName = "Lendo Arquivo",
+            icon = Icons.Outlined.Article,
+            badgeColor = Color(0xFF78350F), // amber container
+            badgeTextColor = Color(0xFFFDE68A)
+        )
+        "list_files", "find_files" -> ToolTheme(
+            friendlyName = "Listando Arquivos",
+            icon = Icons.Outlined.FolderOpen,
+            badgeColor = Color(0xFF1E3A8A), // indigo container
+            badgeTextColor = Color(0xFFBFDBFE)
+        )
+        "delete_file" -> ToolTheme(
+            friendlyName = "Excluindo Arquivo",
+            icon = Icons.Outlined.Delete,
+            badgeColor = Color(0xFF7F1D1D), // red container
+            badgeTextColor = Color(0xFFFCA5A5)
+        )
+        "git_commit", "git_push", "commitandpush" -> ToolTheme(
+            friendlyName = "Git Operação",
+            icon = Icons.Outlined.CloudUpload,
+            badgeColor = Color(0xFF4C1D95), // violet container
+            badgeTextColor = Color(0xFFDDD6FE)
+        )
+        "git_clone", "clone" -> ToolTheme(
+            friendlyName = "Clonando Repositório",
+            icon = Icons.Outlined.CloudDownload,
+            badgeColor = Color(0xFF0369A1), // sky container
+            badgeTextColor = Color(0xFFBAE6FD)
+        )
+        else -> ToolTheme(
+            friendlyName = toolName ?: "Executando Ação",
+            icon = Icons.Outlined.Build,
+            badgeColor = MaterialTheme.colorScheme.secondaryContainer,
+            badgeTextColor = MaterialTheme.colorScheme.onSecondaryContainer
+        )
+    }
+}
+
+@Composable
+private fun IdeCodeBlock(
+    code: String,
+    title: String? = null,
+    modifier: Modifier = Modifier
+) {
+    val lines = remember(code) { code.split("\n") }
+    val isLongCode = lines.size > 12
+    var isExpanded by remember { mutableStateOf(!isLongCode) }
+    val displayLines = if (isExpanded) lines else lines.take(10)
+
+    val clipboardManager = LocalClipboardManager.current
+    val context = LocalContext.current
+
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = Color(0xFF12131A) // deep dark IDE bg
+        ),
+        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF282A36))
+    ) {
+        Column {
+            // Title tab bar simulating IDE header
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(Color(0xFF1E1F29))
+                    .padding(horizontal = 12.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    // macOS window dots
+                    Box(modifier = Modifier.size(8.dp).background(Color(0xFFFF5F56), CircleShape))
+                    Box(modifier = Modifier.size(8.dp).background(Color(0xFFFFBD2E), CircleShape))
+                    Box(modifier = Modifier.size(8.dp).background(Color(0xFF27C93F), CircleShape))
+                    Spacer(Modifier.width(4.dp))
+                    Text(
+                        text = title ?: "arquivo.kt",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = Color(0xFFA6ACCD),
+                        fontFamily = FontFamily.Monospace
+                    )
+                }
+
+                // Copy button
+                IconButton(
+                    onClick = {
+                        clipboardManager.setText(AnnotatedString(code))
+                        Toast.makeText(context, "Copiado!", Toast.LENGTH_SHORT).show()
+                    },
+                    modifier = Modifier.size(24.dp)
+                ) {
+                    Icon(
+                        Icons.Outlined.ContentCopy,
+                        contentDescription = "Copiar código",
+                        tint = Color(0xFFA6ACCD),
+                        modifier = Modifier.size(14.dp)
+                    )
+                }
+            }
+
+            // Code lines container
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState())
+                    .padding(vertical = 8.dp)
+            ) {
+                Column {
+                    displayLines.forEachIndexed { index, line ->
+                        val isAddition = line.startsWith("+") && !line.startsWith("+++")
+                        val isDeletion = line.startsWith("-") && !line.startsWith("---")
+
+                        val bgColor = when {
+                            isAddition -> Color(0x1A10B981) // emerald transparent glow
+                            isDeletion -> Color(0x1AEF4444) // red transparent glow
+                            else -> Color.Transparent
+                        }
+
+                        val textColor = when {
+                            isAddition -> Color(0xFF4ADE80)
+                            isDeletion -> Color(0xFFF87171)
+                            else -> Color(0xFFE2E8F0)
+                        }
+
+                        val prefix = when {
+                            isAddition -> "+"
+                            isDeletion -> "-"
+                            else -> " "
+                        }
+
+                        val cleanLine = if (isAddition || isDeletion) line.drop(1) else line
+
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(bgColor)
+                                .padding(horizontal = 8.dp, vertical = 1.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            // Line number
+                            Text(
+                                text = String.format("%3d", index + 1),
+                                style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp),
+                                color = Color(0xFF4E5579),
+                                fontFamily = FontFamily.Monospace,
+                                modifier = Modifier.width(28.dp)
+                            )
+                            Spacer(Modifier.width(6.dp))
+                            // Diff prefix
+                            Text(
+                                text = prefix,
+                                style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp),
+                                color = textColor.copy(alpha = 0.7f),
+                                fontFamily = FontFamily.Monospace,
+                                modifier = Modifier.width(12.dp)
+                            )
+                            // Code text
+                            Text(
+                                text = cleanLine,
+                                style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp),
+                                color = textColor,
+                                fontFamily = FontFamily.Monospace
+                            )
+                        }
+                    }
+
+                    if (!isExpanded && isLongCode) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(Brush.verticalGradient(listOf(Color.Transparent, Color(0xFF12131A))))
+                                .padding(vertical = 12.dp),
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            // Subtle placeholder for hidden lines
+                        }
+                    }
+                }
+            }
+
+            // Expand / Collapse action bar
+            if (isLongCode) {
+                Box(modifier = Modifier.fillMaxWidth().height(1.dp).background(Color(0xFF282A36)))
+                TextButton(
+                    onClick = { isExpanded = !isExpanded },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(36.dp),
+                    contentPadding = PaddingValues(0.dp)
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Icon(
+                            imageVector = if (isExpanded) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(Modifier.width(4.dp))
+                        Text(
+                            text = if (isExpanded) "Ver Menos" else "Ver Mais (${lines.size - 10} linhas ocultas)",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                 }
             }
         }
